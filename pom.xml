@@ -1,0 +1,356 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>pt.quickLabPIV</groupId>
+	<artifactId>QuickLabPIVng</artifactId>
+	<packaging>jar</packaging>
+	<version>0.8.2</version>
+	<name>QuickLab PIV new generation</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<jdk.version>1.8</jdk.version>
+		<junit.version>4.11</junit.version>
+		<maven.compiler.release>8</maven.compiler.release>
+		<maven.build.timestamp.format>yy-MM-dd HH:mm</maven.build.timestamp.format>
+		<buildDate>${maven.build.timestamp}</buildDate>
+	</properties>
+	
+	<scm>
+		<connection>scm:git:http://127.0.0.1/dummy</connection>
+		<developerConnection>scm:git:https://127.0.0.1/dummy</developerConnection>
+		<tag>HEAD</tag>
+		<url>http://127.0.0.1/dummy</url>
+	</scm>
+	
+	<repositories>
+	<repository>
+                <id>mavenLM</id>
+                    <url>file:///home/lpnm/Documents/HPC/mavenLM</url>
+                </repository>    
+                <repository>
+		    <id>ossrh.snapshots</id>
+		    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		    <releases>
+		        <enabled>false</enabled>
+		    </releases>
+		    <snapshots>
+		        <enabled>true</enabled>
+		    </snapshots>
+		</repository>
+	</repositories>	
+	<developers>
+        <developer>
+            <id>LuisPalmaNunesMendes</id>
+            <name>Luis Palma Nunes Mendes</name>
+            <email>luis.mendes@gmail.com</email>
+            <url></url>
+            <organization>QuickLabPIV</organization>
+            <organizationUrl></organizationUrl>
+            <roles>
+                <role>Chief Technology Officer</role>
+                <role>Project Owner</role>
+                <role>Developer</role>
+            </roles>
+            <timezone>-5</timezone>
+        </developer>
+    </developers>
+	       
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.grpc/grpc-all -->
+		<dependency>
+		    <groupId>io.grpc</groupId>
+		    <artifactId>grpc-all</artifactId>
+		    <version>1.12.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/net.openhft/affinity -->
+		<dependency>
+		    <groupId>net.openhft</groupId>
+		    <artifactId>affinity</artifactId>
+		    <version>3.23.2</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api -->
+		<dependency>
+		    <groupId>org.apache.logging.log4j</groupId>
+		    <artifactId>log4j-slf4j-impl</artifactId>
+		    <version>2.19.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
+		<dependency>
+		    <groupId>org.apache.logging.log4j</groupId>
+		    <artifactId>log4j-api</artifactId>
+		    <version>2.19.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
+		<dependency>
+		    <groupId>org.apache.logging.log4j</groupId>
+		    <artifactId>log4j-core</artifactId>
+		    <version>2.19.0</version>
+		</dependency> 
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-math3</artifactId>
+		    <version>3.6.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.aparapi/aparapi -->
+		<dependency>
+		    <groupId>com.aparapi</groupId>
+		    <artifactId>aparapi</artifactId>
+		    <version>3.0.0-LM</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.aparapi</groupId>
+		    <artifactId>aparapi-jni</artifactId>
+		    <version>1.4.3</version>
+		</dependency>
+		<dependency>
+		    <groupId>pt.quickLabPIV.libs</groupId>
+		    <artifactId>quickLabPIV-libs</artifactId>
+		    <version>0.1.0-LM</version>
+		</dependency>
+        <dependency>
+            <groupId>org.apache.bcel</groupId>
+            <artifactId>bcel</artifactId>
+            <version>6.5.0</version>
+        </dependency>        
+		<dependency>
+		    <groupId>org.glassfish.jaxb</groupId>
+		    <artifactId>jaxb-core</artifactId>
+		    <version>2.3.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.glassfish.jaxb</groupId>
+		    <artifactId>jaxb-runtime</artifactId>
+		    <version>2.3.0</version>
+		</dependency>
+		    <dependency>
+		    <groupId>javax.activation</groupId>
+		    <artifactId>javax.activation-api</artifactId>
+		    <version>1.2.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
+		<dependency>
+		    <groupId>javax.xml.bind</groupId>
+		    <artifactId>jaxb-api</artifactId>
+		    <version>2.3.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.jdesktop/beansbinding -->
+		<dependency>
+		    <groupId>org.jdesktop</groupId>
+		    <artifactId>beansbinding</artifactId>
+		    <version>1.2.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.github.jai-imageio/jai-imageio-core -->
+		<!--<dependency>
+		    <groupId>com.github.jai-imageio</groupId>
+		    <artifactId>jai-imageio-core</artifactId>
+		    <version>1.4.0</version>
+		</dependency>-->
+		<!-- https://mvnrepository.com/artifact/com.github.jai-imageio/jai-imageio-jpeg2000 -->
+		<!--<dependency>
+		    <groupId>com.github.jai-imageio</groupId>
+		    <artifactId>jai-imageio-jpeg2000</artifactId>
+		    <version>1.3.1_CODICE_2</version>
+		</dependency>-->
+		<!-- https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-core -->
+		<!--3.6.4-->
+		<dependency>
+		    <groupId>com.twelvemonkeys.imageio</groupId>
+		    <artifactId>imageio-core</artifactId>
+		    <version>3.8.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-tiff -->
+		<dependency>
+		    <groupId>com.twelvemonkeys.imageio</groupId>
+		    <artifactId>imageio-tiff</artifactId>
+		    <version>3.8.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-jpeg -->
+		<dependency>
+		    <groupId>com.twelvemonkeys.imageio</groupId>
+		    <artifactId>imageio-jpeg</artifactId>
+		    <version>3.8.1</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+
+		<finalName>QuickLabPIVng</finalName>
+		<resources>
+			<resource>
+				<directory>resources</directory>
+				
+			        <targetPath>${project.build.directory}</targetPath>
+            			<includes>
+                			<include>log4j2.xml</include>
+            			</includes>
+            		</resource>
+		</resources>
+		<testSourceDirectory>${project.basedir}/tests</testSourceDirectory>
+		<plugins>
+
+			<!-- download source code in Eclipse, best practice -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.9</version>
+				<configuration>
+					<downloadSources>true</downloadSources>
+					<downloadJavadocs>false</downloadJavadocs>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>templating-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<executions>
+					<execution>
+						<id>filter-src</id>
+						<goals>
+							<goal>filter-sources</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>			
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.4</version>
+				<configuration>
+					<revisionOnScmFailure>no.scm.config.in.pom</revisionOnScmFailure>
+					<buildNumberPropertyName>buildNumber.value</buildNumberPropertyName>
+					
+					<format>{0,number}</format>
+					<items>
+						<item>buildNumber</item>
+					</items>
+				</configuration>
+				<executions>
+					<execution>
+						<id>create-timestamp-id</id>					
+						<phase>validate</phase>
+						<goals>
+							<goal>create-timestamp</goal>
+						</goals>
+						<configuration>
+							<timestampFormat>yyyy-MM-dd HH:mm:ss.S</timestampFormat>					
+							<timestampPropertyName>buildNumber.timestamp</timestampPropertyName>	
+						</configuration>
+					</execution>
+					<execution>				
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>						
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+			    <groupId>org.codehaus.mojo</groupId>
+			    <artifactId>build-helper-maven-plugin</artifactId>
+			    <executions>
+				<execution>
+				    <phase>generate-sources</phase>
+				    <goals>
+					<goal>add-source</goal>
+				    </goals>
+				    <configuration>
+					<sources>			
+						<source>ui/src/main/java</source>
+					</sources>
+				    </configuration>
+				</execution>
+			    </executions>
+			</plugin>
+			<!-- Set a compiler level -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.0</version>
+				<configuration>
+					<release>8</release>
+				        <!--<includes>
+						<include>**</include>
+					</includes>-->
+				</configuration>
+			</plugin>
+			<!-- Maven Shade Plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.3</version>
+				<executions>
+					<!-- Run shade goal on package phase -->
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<!-- <filter>
+				      				<artifact>*:*</artifact>
+							       <excludes>
+				        			 <exclude>org/apache/logging/log4j/**</exclude>
+				      				</excludes>
+				   			</filter> -->
+				   			<!-- <artifactSet>
+				   			   <excludes>
+				   			      <exclude>*:log4j-api:jar:</exclude>
+				   			   </excludes>
+				   			</artifactSet> -->
+							<transformers>
+								<!-- add Main-Class to manifest file -->
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>pt.quickLabPIV.ui.views.QuickLabPIVng</mainClass>
+									<manifestEntries>
+									    <Class-Path>.</Class-Path>
+									</manifestEntries>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+									<resource>resources/QuickLabPIVng.png</resource>
+									<file>QuickLabPIVng.png</file>
+								</transformer>
+						                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+									<resource>resources/fftBenchmark/rankine_vortex01_0.tif</resource>
+									<file>resources/fftBenchmark/rankine_vortex01_0.tif</file>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+									<resource>resources/fftBenchmark/rankine_vortex01_1.tif</resource>
+									<file>resources/fftBenchmark/rankine_vortex01_1.tif</file>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+									<resource>resources/fftBenchmark/gpuFFTBenchmarkValidationData.matFloat</resource>
+									<file>resources/fftBenchmark/gpuFFTBenchmarkValidationData.matFloat</file>
+								</transformer>
+							</transformers>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+    				<groupId>org.apache.maven.plugins</groupId>
+    				<artifactId>maven-surefire-plugin</artifactId>
+    				<version>2.22.0</version>
+    				<configuration>
+    					<testSourceDirectory>${project.basedir}/tests</testSourceDirectory>
+    				</configuration>
+    				<dependencies>
+      					<dependency>
+        					<groupId>org.apache.maven.surefire</groupId>
+        					<artifactId>surefire-junit47</artifactId>
+        					<version>2.22.0</version>
+      					</dependency>
+    				</dependencies>
+  			</plugin>
+		</plugins>
+	</build>
+
+</project>
