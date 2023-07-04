@@ -1,0 +1,21 @@
+package pt.quickLabPIV.ui.converters;
+
+public class NullMarginsConverter extends ConverterWithForwardValidator<Integer, Object> {
+    @Override
+    public Integer convertForwardAfterValidation(Integer value) {        
+        //return String.valueOf(value);
+        return value;
+    }
+
+    @Override
+    public Integer convertReverse(Object value) {
+        /*int result = Integer.MAX_VALUE;
+        try {
+            result = Integer.parseInt((String)value);
+        } catch (NumberFormatException e) {
+            //Ignored - this will Integer.MAX_VALUE to be returned
+        }
+        return result;*/
+        return (Integer)value;
+    }
+}
