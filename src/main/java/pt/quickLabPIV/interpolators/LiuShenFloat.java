@@ -686,7 +686,7 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
         }
         imgA = img;
         filteredImgA = filterLS.applyFilter(img, filteredImgA);
-        filteredImgA.normalize((ImageFloat)filteredImgA);
+        filteredImgA = filteredImgA.normalize((ImageFloat)filteredImgA);
         
         if (helper != null) {
             helper.receiveImageA(img);
@@ -707,7 +707,7 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
         }
         imgB = img;
         filteredImgB = filterLS.applyFilter(img, filteredImgB);
-        filteredImgB.normalize((ImageFloat)filteredImgB);
+        filteredImgB = filteredImgB.normalize((ImageFloat)filteredImgB);
         
         if (helper != null) {
             helper.receiveImageB(img);
