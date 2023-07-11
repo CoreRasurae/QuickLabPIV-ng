@@ -11,6 +11,7 @@ import javax.naming.InvalidNameException;
 import org.junit.Before;
 import org.junit.Test;
 
+import pt.quickLabPIV.IgnorePIVBaseDisplacementsModeEnum;
 import pt.quickLabPIV.PIVContextSingleton;
 import pt.quickLabPIV.PIVContextTestsSingleton;
 import pt.quickLabPIV.PIVInputParameters;
@@ -323,6 +324,8 @@ public class DenseLiuShenGpuTest {
         lsConfig.setMultiplierLagrangeLS(1000.0f);
         lsConfig.setNumberOfIterationsLS(60);
         lsConfig.setVectorsWindowSizeLS(3);
+        lsConfig.setIgnorePIVBaseDisplacements(false);
+        lsConfig.setIgnorePIVBaseDisplacementsMode(IgnorePIVBaseDisplacementsModeEnum.IgnoreUV);
         PIVInputParameters params = PIVContextSingleton.getSingleton().getPIVParameters();
         params.setSpecificConfiguration(LiuShenInterpolatorConfiguration.IDENTIFIER, lsConfig);
         
@@ -419,6 +422,8 @@ public class DenseLiuShenGpuTest {
         lsConfig.setMultiplierLagrangeLS(1000.0f);
         lsConfig.setNumberOfIterationsLS(60);
         lsConfig.setVectorsWindowSizeLS(3);
+        lsConfig.setIgnorePIVBaseDisplacements(false);
+        lsConfig.setIgnorePIVBaseDisplacementsMode(IgnorePIVBaseDisplacementsModeEnum.IgnoreUV);
         PIVInputParameters params = PIVContextSingleton.getSingleton().getPIVParameters();
         params.setSpecificConfiguration(LiuShenInterpolatorConfiguration.IDENTIFIER, lsConfig);
         
@@ -480,6 +485,9 @@ public class DenseLiuShenGpuTest {
         lsConfig.setMultiplierLagrangeLS(1000.0f);
         lsConfig.setNumberOfIterationsLS(iterations);
         lsConfig.setVectorsWindowSizeLS(3);
+        lsConfig.setIgnorePIVBaseDisplacements(false);
+        lsConfig.setIgnorePIVBaseDisplacementsMode(IgnorePIVBaseDisplacementsModeEnum.IgnoreUV);
+
         PIVInputParameters params = PIVContextSingleton.getSingleton().getPIVParameters();
         params.setSpecificConfiguration(LiuShenInterpolatorConfiguration.IDENTIFIER, lsConfig);
         
