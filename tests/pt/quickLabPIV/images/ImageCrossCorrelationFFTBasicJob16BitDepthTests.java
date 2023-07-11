@@ -219,7 +219,7 @@ public class ImageCrossCorrelationFFTBasicJob16BitDepthTests extends ImageCrossC
         
         for (int i = 0; i < outMatrixFFT.getHeight(); i++) {
         	for (int j = 0; j < outMatrixFFT.getWidth(); j++) {
-        		assertEquals("Cross-correlation doesn't match", outMatrixFFT.getElement(i, j), outMatrixDef.getElement(i, j), 5e-1f);
+        		assertEquals("Cross-correlation doesn't match at I: " + i + ", J: " + j, outMatrixFFT.getElement(i, j), outMatrixDef.getElement(i, j), 5e-1f);
         	}
         }
         
@@ -324,7 +324,7 @@ public class ImageCrossCorrelationFFTBasicJob16BitDepthTests extends ImageCrossC
 	        for (int i = 0; i < outMatrixFFT.getHeight(); i++) {
 	        	for (int j = 0; j < outMatrixFFT.getWidth(); j++) {
 	        		assertEquals("Cross-correlation doesn't match - matrixIndex: "  + matrixIndex + 
-	        				", i: " + i + ", j: " + j, outMatrixDef.getElement(i, j), outMatrixFFT.getElement(i, j), 6.5e-2f);
+	        				", i: " + i + ", j: " + j, outMatrixDef.getElement(i, j), outMatrixFFT.getElement(i, j), outMatrixDef.getElement(i, j) / 1000000.0f);
 	        	}
 	        }
         }

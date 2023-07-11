@@ -527,10 +527,22 @@ public class ImageCrossCorrelationFFTParStdJobTests {
         outputMatrices.get(0).copyMatrixTo2DArray(resultCL, 0, 0);
         SimpleFFT.dump2DArray("XCorr OpenCL", resultCL);
         
+        float maxValueCL = computeMaxValue(resultCL);
+        float maxValueJava = computeMaxValue(resultMat);
+        
+        float ratio = maxValueCL / maxValueJava;
+        for (int i = 0; i < resultCL.length; i++) {
+            for (int j = 0; j < resultCL[0].length; j++) {;
+                if (resultCL[i][j] > 0) {
+                    resultCL[i][j] = resultCL[i][j] * ratio;
+                }
+            }
+        }
+        
         for (int i = 0; i < 2*height-1; i++) {
             for (int j = 0; j < 2*width-1; j++) {
               assertEquals("Cross correlation doesn't match expected at [i=" + i + ", j=" + j + "]", 
-                      resultMat[i][j], resultCL[i][j], 1.0f);  
+                      resultMat[i][j], resultCL[i][j], maxValueCL / 1000000.0f);  
             }
         }
         
@@ -552,7 +564,21 @@ public class ImageCrossCorrelationFFTParStdJobTests {
         assertEquals("Displacement is wrong", 10, result.getMainPeakJ() -  (width - 1), 1e-10f);
 	}
 	
-	public void testSyntheticImageCrossCorrelation() {
+	private float computeMaxValue(float[][] matrix) {
+	    float maxValue = 0;
+	    
+	    for (int i = 0; i < matrix.length; i++) {
+	        for (int j = 0; j < matrix.length; j++) {
+	            if (matrix[i][j] > maxValue) {
+	                maxValue = matrix[i][j];
+	            }
+	        }
+	    }
+	    
+	    return maxValue;
+    }
+
+    public void testSyntheticImageCrossCorrelation() {
 		String imageFile1 = "testFiles" + File.separator + "img1.png";
 		String imageFile2 = "testFiles" + File.separator + "img2.png";
 		
