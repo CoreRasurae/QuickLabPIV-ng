@@ -4,7 +4,7 @@
 	<groupId>pt.quickLabPIV</groupId>
 	<artifactId>QuickLabPIVng</artifactId>
 	<packaging>jar</packaging>
-	<version>0.8.2</version>
+	<version>0.8.3</version>
 	<name>QuickLab PIV new generation</name>
 	<url>http://maven.apache.org</url>
 
