@@ -109,7 +109,7 @@ public abstract class Matrix {
 	 * @throws MatrixConversionOverflow if conversion cannot be performed without overflowing
 	 */
 	public abstract void copyMatrixFrom2DArray(final float[][] source, final int offsetI, final int offsetJ);
-
+	
 	/**
 	 * Copies the content of a Matrix to a 2-D array of float values. <br/> 
 	 * The target array can be larger than the original array.
@@ -119,6 +119,22 @@ public abstract class Matrix {
 	 */
 	public abstract void copyMatrixTo2DArray(final float[][] destination, final int offsetI, final int offsetJ);
 
+    /**
+     * Copies the content of a Matrix to a 2-D array of float values and normalize and offset. <br/> 
+     * The target array can be larger than the original array.
+     * @param destination the destination array
+     * @param offsetI the offsetI in the destination array
+     * @param offsetJ the offsetJ in the destination array
+     */ 
+    public void copyMatrixTo2DArrayAndNormalizeAndOffset(final float[][] destination, int offsetI, int offsetJ) {
+        for (int srcI = 0, dstI = 0; srcI < getHeight(); srcI++, dstI++) {
+            for (int srcJ = 0, dstJ = 0; srcJ < getWidth(); srcJ++, dstJ++) {
+                float value = getElement(srcI, srcJ);
+                destination[dstI + offsetI][dstJ + offsetJ] = value / getMaxValue() * 16.0f + 1.0f;
+            }
+        }
+    }
+	
 	/**
 	 * Copies the content of a Matrix to a 2-D array of float values in mirrored order, both in I and J. <br/> 
 	 * The target array can be larger than the original array.
