@@ -26,7 +26,7 @@
 	<repositories>
 	<repository>
                 <id>mavenLM</id>
-                    <url>file:///home/lpnm/Documents/HPC/mavenLM</url>
+                    <url>file:///mavenLM</url>
                 </repository>    
                 <repository>
 		    <id>ossrh.snapshots</id>
@@ -43,7 +43,7 @@
         <developer>
             <id>LuisPalmaNunesMendes</id>
             <name>Luis Palma Nunes Mendes</name>
-            <email>luis.mendes@gmail.com</email>
+            <email>luis.mendes@tecnico.ulisboa.pt</email>
             <url></url>
             <organization>QuickLabPIV</organization>
             <organizationUrl></organizationUrl>
@@ -103,7 +103,7 @@
 		<dependency>
 		    <groupId>com.aparapi</groupId>
 		    <artifactId>aparapi</artifactId>
-		    <version>3.0.0-LM</version>
+		    <version>3.0.1-LM</version>
 		</dependency>
 		<dependency>
 		    <groupId>com.aparapi</groupId>
