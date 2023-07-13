@@ -1,6 +1,19 @@
-# QuickLabPIV-ng v0.8.3 - Initial release
+# QuickLabPIV-ng
 A Particle Imaging Velocimetry (PIV) and Dense PIV Software Laboratory with GPGPU processing
 
+- PIV and Hybrid PIV high performance computing application with GP-GPU OpenCL support (by Aparapi)
+- Friendly Graphical User Interface (GUI)
+- Supports both dense and sparse Liu-Shen combined with Lucas-Kanade and Lucas-Kanade only Optical Flow methods
+- Support classic PIV and PIV with warping modes
+- MATLAB file format data export including multi-volume support
+- Adaptive PIV support with configurable start and end Interrogation Area window sizes
+- Multiple sub-pixel methods including Polynomial Gaussian 1D-1D and Hongwei Guo's Gaussian 1D-1D Robust Linear regression, among others
+- Vector validation and substitution including secondary peak substitution
+- Single XML configuration file
+- Support images sequences and image pairs
+- Selectable GPU per CPU threads distribution
+
+# Compilation
 - Pre-requisites:
   Java development kit higher than 8, maven, aparapi-3.0.3-LM.jar, QuickLabPIV-libs
 
