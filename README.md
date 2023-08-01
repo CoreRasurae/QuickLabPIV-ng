@@ -15,14 +15,18 @@ A Particle Imaging Velocimetry (PIV) and Dense PIV Software Laboratory with GPGP
 
 # Compilation
 - Pre-requisites:
-  Java development kit higher than 8, maven, aparapi-3.0.3-LM.jar, QuickLabPIV-libs
+  Java development kit higher than 8, maven, aparapi-3.0.1_LM2.jar, QuickLabPIV-libs
+
+  https://github.com/CoreRasurae/aparapi/releases/tag/Aparapi_v3.0.1LM2
+  
+  https://github.com/CoreRasurae/QuickLabPIV-libs/releases/tag/QuickLabPIV-libs_v0.1.0
 
 - (Temporary workaround - before official release of new Aparapi version in maven central) -  
 Package generation instructions:
 
-Step 1 - Install aparapi-3.0.1-LM.jar in a local maven repository under current folder / mavenLM
+Step 1 - Install aparapi-3.0.1_LM2.jar in a local maven repository under current folder / mavenLM
 
-```mvn install:install-file -Dfile=<PATH_TO_JAR>/aparapi-3.0.1-LM.jar -DlocalRepositoryPath=<BASE_DIR>/mavenLM -DgroupId=com.aparapi -DartifactId=aparapi -Dversion=3.0.1-LM -Dpackaging=jar```
+```mvn install:install-file -Dfile=<PATH_TO_JAR>/aparapi-3.0.1_LM2.jar -DlocalRepositoryPath=<BASE_DIR>/mavenLM -DgroupId=com.aparapi -DartifactId=aparapi -Dversion=3.0.1-LM -Dpackaging=jar```
 
 Step 2 - Compile QuickLab-libs
 
