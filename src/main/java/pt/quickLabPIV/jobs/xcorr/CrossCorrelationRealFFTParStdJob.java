@@ -39,6 +39,8 @@ public class CrossCorrelationRealFFTParStdJob extends CrossCorrelationFFTTemplat
 	private int maxNumberOfUsedTiles = 0;
 	private int maxMemorySize = 0;
 	
+	private boolean normalizeAndRegularizeInputMatrices = true;
+	
 	/**
 	 * Creates a cross-correlation Job from a list of pair of matrices F and G.
 	 * The number of matrices in F is related with their dimensions and target device computing capabilities.
@@ -64,7 +66,12 @@ public class CrossCorrelationRealFFTParStdJob extends CrossCorrelationFFTTemplat
 		super(normalized, device);
 	}
 		
-	@Override 
+	public CrossCorrelationRealFFTParStdJob(final ComputationDevice device, final boolean normalized, final List<Matrix> matricesF, final List<Matrix> matricesG, boolean _normalizeAndRegularizeInputMatrices) {
+	    super(device, normalized, matricesF, matricesG);
+	    normalizeAndRegularizeInputMatrices = _normalizeAndRegularizeInputMatrices;
+    }
+
+    @Override 
 	protected Logger getLogger() {
 		return logger;
 	}
@@ -110,8 +117,14 @@ public class CrossCorrelationRealFFTParStdJob extends CrossCorrelationFFTTemplat
 				matrixG = inputTilesG.get(matrixIndex).getMatrix();
 			}
     		
-			matrixF.copyMirroredMatrixToArrayNormalizeAndOffset(matrixInRe, offset, outputGeometry[1]);			
-			matrixG.copyMatrixToArrayAndNormalizeAndOffset(matrixInIm, offset, outputGeometry[1]);			
+			//FIXME Normalization should be done in the FFT computation even if no regularization is to be performed.
+			if (normalizeAndRegularizeInputMatrices) {
+    			matrixF.copyMirroredMatrixToArrayNormalizeAndOffset(matrixInRe, offset, outputGeometry[1]);			
+    			matrixG.copyMatrixToArrayAndNormalizeAndOffset(matrixInIm, offset, outputGeometry[1]);
+			} else {
+			    matrixF.copyMirroredMatrixToArray(matrixInRe, offset, outputGeometry[1]);          
+                matrixG.copyMatrixToArray(matrixInIm, offset, outputGeometry[1]);
+			}
     		matrixIndex++;
         }        
 	}

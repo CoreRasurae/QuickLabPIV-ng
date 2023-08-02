@@ -55,6 +55,8 @@ public class CrossCorrelationJob extends Job<List<Tile>, XCorrelationResults> {
 	private int[] threadOffsetI; //Contains the result I offset within the output subMatrix that the work-item is to compute
 	private int[] threadOffsetJ; //Contains the result J offset within the output subMatrix that the work-item is to compute
 	
+	private boolean normalizeAndRegularizeInputMatrices = true;
+	
 	/**
 	 * Creates a cross-correlation Job from a list of pair of matrices F and G.
 	 * The number of matrices in F is related with their dimensions and target device computing capabilities.
@@ -64,8 +66,13 @@ public class CrossCorrelationJob extends Job<List<Tile>, XCorrelationResults> {
 	 * @param matricesG the list of input matrices G (to do xcorr(F,G))
 	 */
 	public CrossCorrelationJob(final ComputationDevice device, final boolean normalized, final List<Matrix> matricesF, final List<Matrix> matricesG) {
-		if (matricesF.size() < 1 || matricesG.size() < 1) {
-			return;
+		constructorHelper(device, normalized, matricesF, matricesG);
+	}
+
+    private boolean constructorHelper(final ComputationDevice device, final boolean normalized,
+            final List<Matrix> matricesF, final List<Matrix> matricesG) {
+        if (matricesF.size() < 1 || matricesG.size() < 1) {
+			return false;
 		}
 
 		Matrix refMatrix = matricesF.get(0);
@@ -109,16 +116,32 @@ public class CrossCorrelationJob extends Job<List<Tile>, XCorrelationResults> {
 		
 		inputMatricesF = matricesF;
 		inputMatricesG = matricesG;
-	}
+		
+		return true;
+    }
 
+    public CrossCorrelationJob(final ComputationDevice device, final boolean normalized, final List<Matrix> matricesF, final List<Matrix> matricesG, final boolean _normalizeAndRegularizeInputMatrices) {
+        constructorHelper(device, normalized, matricesF, matricesG);
+        normalizeAndRegularizeInputMatrices = _normalizeAndRegularizeInputMatrices;
+    }
+    
 	public CrossCorrelationJob(final boolean normalized, final ComputationDevice device, int[] computeDeviceGeometry) {
 		computeDevice = device;
 		this.normalized = normalized;
 		this.computeDeviceGeometry = computeDeviceGeometry;
 		this.computeMaxDimensions = computeDeviceGeometry != null ? computeDeviceGeometry.length : 0;
 	}
-		
-	private void analyzeTilesHelper(final List<Tile> tilesF, final List<Tile> tilesG) {
+
+    public CrossCorrelationJob(final boolean normalized, final ComputationDevice device, int[] computeDeviceGeometry, final boolean _normalizeAndRegularizeInputMatrices) {
+        computeDevice = device;
+        this.normalized = normalized;
+        this.computeDeviceGeometry = computeDeviceGeometry;
+        this.computeMaxDimensions = computeDeviceGeometry != null ? computeDeviceGeometry.length : 0;
+        normalizeAndRegularizeInputMatrices = _normalizeAndRegularizeInputMatrices;
+    }
+
+	
+    private void analyzeTilesHelper(final List<Tile> tilesF, final List<Tile> tilesG) {
 		if (tilesF.size() < 1 || tilesG.size() < 1) {
 			return;
 		}
@@ -273,8 +296,28 @@ public class CrossCorrelationJob extends Job<List<Tile>, XCorrelationResults> {
 	        				matrixG = inputTilesG.get(matrixIndex).getMatrix();
 	        			}
 		        		
-	        			matrixF.copyMatrixTo1PaddedArray(matrixInF, destinationOffset);
-	        			matrixG.copyMatrixTo1PaddedArray(matrixInG, destinationOffset);
+	        			//FIXME Ideally all the cross-correlations should be normalized at each FFT step, even if no regularization is employed.
+	                    //There is no point in scaling the FFT results, because:
+	                    //- The FFT is not normalized, it overflows and overflows the float representation with 16Bits images, and does not cause Inf or NaN,
+	                    //  thus producing completely invalid results.
+	                    //So we artificially normalize it before doing the computation. This must be done in the implementation.
+	        			if (normalizeAndRegularizeInputMatrices) {
+    	                    float[][] newMatrixFF = new float[matrixF.getHeight()][matrixF.getWidth()];
+    	                    matrixF.copyMatrixTo2DArrayAndNormalizeAndOffset(newMatrixFF, 0, 0);
+    	                    float[][] newMatrixGF = new float[matrixF.getHeight()][matrixF.getWidth()];
+    	                    matrixG.copyMatrixTo2DArrayAndNormalizeAndOffset(newMatrixGF, 0, 0);
+    
+    	                    Matrix newMatrixF = new MatrixFloat(matrixF.getHeight(), matrixF.getWidth(), 17.0f);
+    	        			newMatrixF.copyMatrixFrom2DArray(newMatrixFF, 0, 0);
+    	        			Matrix newMatrixG = new MatrixFloat(matrixG.getHeight(), matrixG.getWidth(), 17.0f);
+    	        			newMatrixG.copyMatrixFrom2DArray(newMatrixGF, 0, 0);
+
+                            newMatrixF.copyMatrixTo1PaddedArray(matrixInF, destinationOffset);
+                            newMatrixG.copyMatrixTo1PaddedArray(matrixInG, destinationOffset);
+	        			} else {
+	        			    matrixF.copyMatrixTo1PaddedArray(matrixInF, destinationOffset);
+                            matrixG.copyMatrixTo1PaddedArray(matrixInG, destinationOffset);
+	        			}
 	        		}
 	        			        		
 	        		matrixIndex++;

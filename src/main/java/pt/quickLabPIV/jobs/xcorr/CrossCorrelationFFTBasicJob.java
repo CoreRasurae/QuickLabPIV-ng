@@ -37,6 +37,8 @@ public class CrossCorrelationFFTBasicJob extends CrossCorrelationFFTTemplate {
 	
 	private int maxNumberOfUsedTiles = 0;
 	private int maxMemorySize = 0;
+	
+	private boolean normalizeAndRegularizeInputMatrices = true;
 
 	/**
 	 * Creates a cross-correlation Job from a list of pair of matrices F and G.
@@ -53,8 +55,18 @@ public class CrossCorrelationFFTBasicJob extends CrossCorrelationFFTTemplate {
 	public CrossCorrelationFFTBasicJob(final boolean normalized, final ComputationDevice device, int[] computeDeviceGeometry) {
 		super(normalized, device, computeDeviceGeometry);
 	}
-		
-	@Override
+	
+	public CrossCorrelationFFTBasicJob(final boolean normalized, final ComputationDevice device, int[] computeDeviceGeometry, boolean _normalizeAndRegularizeInputMatrices) {
+        super(normalized, device, computeDeviceGeometry);
+        normalizeAndRegularizeInputMatrices =  _normalizeAndRegularizeInputMatrices;
+    }
+	
+	public CrossCorrelationFFTBasicJob(final ComputationDevice device, final boolean normalized, final List<Matrix> matricesF, final List<Matrix> matricesG, boolean _normalizeAndRegularizeInputMatrices) {
+	    super(device, normalized, matricesF, matricesG);
+	    normalizeAndRegularizeInputMatrices =  _normalizeAndRegularizeInputMatrices;
+    }
+
+    @Override
 	protected Logger getLogger() {
 		return logger;
 	}
@@ -101,9 +113,18 @@ public class CrossCorrelationFFTBasicJob extends CrossCorrelationFFTTemplate {
 				matrixG = inputTilesG.get(matrixIndex).getMatrix();
 			}
     		
-			matrixF.copyMirroredMatrixToArray(matrixInFRe, offset, outputGeometry[0]);
-			matrixG.copyMatrixToArray(matrixInGRe, offset, outputGeometry[0]);
-    			        		
+			//FIXME Ideally all the cross-correlations should be normalized at each FFT step, even if no regularization is employed.
+		     //There is no point in scaling the FFT results, because:
+	        //- The FFT is not normalized, it overflows and overflows the float representation with 16Bits images, and does not cause Inf or NaN,
+	        //  thus producing completely invalid results.
+			if (!normalizeAndRegularizeInputMatrices) {
+    			matrixF.copyMirroredMatrixToArray(matrixInFRe, offset, outputGeometry[1]);
+    			matrixG.copyMatrixToArray(matrixInGRe, offset, outputGeometry[1]);
+			} else {
+    			matrixF.copyMirroredMatrixToArrayNormalizeAndOffset(matrixInFRe, offset, outputGeometry[1]);
+    			matrixG.copyMatrixToArrayAndNormalizeAndOffset(matrixInGRe, offset, outputGeometry[1]);
+			}
+    		
     		matrixIndex++;
         }        
    	}

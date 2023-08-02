@@ -440,17 +440,21 @@ public class SimpleFFT {
     }
     
     public static void dump2DArray(String name, int[][] xr) {
-        System.out.println(name);
-        for (int i = 0; i < xr.length; i++) {
-            printArray(xr[i]);
+        if (DUMP_INFO) {
+            System.out.println(name);
+            for (int i = 0; i < xr.length; i++) {
+                printArray(xr[i]);
+            }
         }
      }
 
      
      public static void dump2DArray(String name, float[][] xr) {
-         System.out.println(name);
-         for (int i = 0; i < xr.length; i++) {
-             printArray(xr[i]);
+         if (DUMP_INFO) {
+             System.out.println(name);
+             for (int i = 0; i < xr.length; i++) {
+                 printArray(xr[i]);
+             }
          }
      }
 

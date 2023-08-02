@@ -38,6 +38,8 @@ public class CrossCorrelationFFTParStdJob extends CrossCorrelationFFTTemplate {
 	private int maxNumberOfUsedTiles = 0;
 	private int maxMemorySize = 0;
 	
+	private boolean normalizeAndRegularizeInputMatrices = true;
+	
 	/**
 	 * Creates a cross-correlation Job from a list of pair of matrices F and G.
 	 * The number of matrices in F is related with their dimensions and target device computing capabilities.
@@ -53,12 +55,22 @@ public class CrossCorrelationFFTParStdJob extends CrossCorrelationFFTTemplate {
 	public CrossCorrelationFFTParStdJob(final boolean normalized, final ComputationDevice device, int[] computeDeviceGeometry) {
 		super(normalized, device, computeDeviceGeometry);
 	}
-	
+
+	public CrossCorrelationFFTParStdJob(final boolean normalized, final ComputationDevice device, int[] computeDeviceGeometry, boolean _normalizeAndRegularizeInputMatrices) {
+	    super(normalized, device, computeDeviceGeometry);
+	    normalizeAndRegularizeInputMatrices = _normalizeAndRegularizeInputMatrices;
+	}
+
 	public CrossCorrelationFFTParStdJob(final boolean normalized, final ComputationDevice device) {
 		super(normalized, device);
 	}
 		
-	@Override 
+	public CrossCorrelationFFTParStdJob(final ComputationDevice device, final boolean normalized, final List<Matrix> matricesF, final List<Matrix> matricesG, boolean _normalizeAndRegularizeInputMatrices) {
+	    super(device, normalized, matricesF, matricesG);
+	    normalizeAndRegularizeInputMatrices = _normalizeAndRegularizeInputMatrices;
+    }
+
+    @Override 
 	protected Logger getLogger() {
 		return logger;
 	}
@@ -104,9 +116,17 @@ public class CrossCorrelationFFTParStdJob extends CrossCorrelationFFTTemplate {
 				matrixG = inputTilesG.get(matrixIndex).getMatrix();
 			}
     		
-			matrixF.copyMirroredMatrixToArray(matrixInFRe, offset, outputGeometry[1]);
-			matrixG.copyMatrixToArray(matrixInGRe, offset, outputGeometry[1]);
-    			        		
+			//FIXME Ideally all the cross-correlations should be normalized at each FFT step, even if no regularization is employed.
+			//Since the FFT implementation does not normalize, it causes float operation overflow that does not result in Inf or Nan, instead
+			//it produces both large negative and positive values, that do not match the CrossCorrelation expected output.
+		    if (!normalizeAndRegularizeInputMatrices) {
+		        matrixF.copyMirroredMatrixToArray(matrixInFRe, offset, outputGeometry[1]);
+		        matrixG.copyMatrixToArray(matrixInGRe, offset, outputGeometry[1]);
+		    } else {
+    			matrixF.copyMirroredMatrixToArrayNormalizeAndOffset(matrixInFRe, offset, outputGeometry[1]);
+    			matrixG.copyMatrixToArrayAndNormalizeAndOffset(matrixInGRe, offset, outputGeometry[1]);
+		    }        		
+    			
     		matrixIndex++;
         }
 	}
