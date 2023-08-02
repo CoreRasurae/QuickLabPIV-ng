@@ -257,7 +257,7 @@ public class ImageCrossCorrelationJobTests {
 		inputMatricesF.add(matrixA);
 		inputMatricesG.add(matrixB);
 		
-		CrossCorrelationJob job = new CrossCorrelationJob(gpuDevice, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(gpuDevice, false, inputMatricesF, inputMatricesG, false);
 		try {
 	        job.analyze();
 	        job.compute();
@@ -330,7 +330,7 @@ public class ImageCrossCorrelationJobTests {
 		inputMatricesF.add(matrixTopLeftA);
 		inputMatricesG.add(matrixTopLeftB);
 		
-		CrossCorrelationJob job = new CrossCorrelationJob(device, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(device, false, inputMatricesF, inputMatricesG, false);
 		try {
 	        job.analyze();
 	        job.compute();
@@ -401,7 +401,7 @@ public class ImageCrossCorrelationJobTests {
 		Image t2 = new Image((MatrixByte)matrixBottomLeftB, width, height, "t2.png");
 		t2.writeToFile(true);*/
 				
-		CrossCorrelationJob job = new CrossCorrelationJob(device, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(device, false, inputMatricesF, inputMatricesG, false);
 		try {
 	        job.analyze();
 	        job.compute();
@@ -469,7 +469,7 @@ public class ImageCrossCorrelationJobTests {
 		inputMatricesF.add(matrixTopRightA);
 		inputMatricesG.add(matrixTopRightB);
 		
-		CrossCorrelationJob job = new CrossCorrelationJob(device, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(device, false, inputMatricesF, inputMatricesG, false);
 		try {
 	        job.analyze();
 	        job.compute();
@@ -537,7 +537,7 @@ public class ImageCrossCorrelationJobTests {
 		inputMatricesF.add(matrixBottomRightA);
 		inputMatricesG.add(matrixBottomRightB);
 		
-		CrossCorrelationJob job = new CrossCorrelationJob(device, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(device, false, inputMatricesF, inputMatricesG, false);
 		try {
 	        job.analyze();
 	        job.compute();

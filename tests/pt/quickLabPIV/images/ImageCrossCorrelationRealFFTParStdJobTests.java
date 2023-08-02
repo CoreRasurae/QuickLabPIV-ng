@@ -413,9 +413,9 @@ public class ImageCrossCorrelationRealFFTParStdJobTests {
         List<Matrix> outputMatrices = results.getCrossMatrices(); 
 
         float[][] matA = new float[height][width];
-        matrixTopRightA.copyMatrixTo2DArray(matA, 0, 0);
+        matrixTopRightA.copyMatrixTo2DArrayAndNormalizeAndOffset(matA, 0, 0);
         float[][] matB = new float[height][width];
-        matrixTopRightB.copyMatrixTo2DArray(matB, 0, 0);
+        matrixTopRightB.copyMatrixTo2DArrayAndNormalizeAndOffset(matB, 0, 0);
 
         float[][] resultMat = FastRealFFTXCorr.computeXCorr(matA, matB);
         Matrix resultCPU = new MatrixFloat(resultMat.length, resultMat[0].length);
@@ -516,9 +516,9 @@ public class ImageCrossCorrelationRealFFTParStdJobTests {
         List<Matrix> outputMatrices = results.getCrossMatrices(); 
 
         float[][] matA = new float[height][width];
-        matrixBottomRightA.copyMatrixTo2DArray(matA, 0, 0);
+        matrixBottomRightA.copyMatrixTo2DArrayAndNormalizeAndOffset(matA, 0, 0);
         float[][] matB = new float[height][width];
-        matrixBottomRightB.copyMatrixTo2DArray(matB, 0, 0);
+        matrixBottomRightB.copyMatrixTo2DArrayAndNormalizeAndOffset(matB, 0, 0);
         
         float[][] resultMat = FastRealFFTXCorr.computeXCorr(matA, matB);
         if (dumpXCorr) {

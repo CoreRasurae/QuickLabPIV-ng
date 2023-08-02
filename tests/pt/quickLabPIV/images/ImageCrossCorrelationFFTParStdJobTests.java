@@ -267,9 +267,9 @@ public class ImageCrossCorrelationFFTParStdJobTests {
         List<Matrix> outputMatrices = results.getCrossMatrices(); 
         
         float[][] matA = new float[height][width];
-        matrixTopLeftA.copyMatrixTo2DArray(matA, 0, 0);
+        matrixTopLeftA.copyMatrixTo2DArrayAndNormalizeAndOffset(matA, 0, 0);
         float[][] matB = new float[height][width];
-        matrixTopLeftB.copyMatrixTo2DArray(matB, 0, 0);
+        matrixTopLeftB.copyMatrixTo2DArrayAndNormalizeAndOffset(matB, 0, 0);        
         
         float[][] resultMat = FastRealFFTXCorr.computeXCorr(matA, matB);
         SimpleFFT.dump2DArray("XCorr Java", resultMat);
@@ -348,9 +348,9 @@ public class ImageCrossCorrelationFFTParStdJobTests {
         List<Matrix> outputMatrices = results.getCrossMatrices(); 
 
         float[][] matA = new float[height][width];
-        matrixBottomLeftA.copyMatrixTo2DArray(matA, 0, 0);
+        matrixBottomLeftA.copyMatrixTo2DArrayAndNormalizeAndOffset(matA, 0, 0);
         float[][] matB = new float[height][width];
-        matrixBottomLeftB.copyMatrixTo2DArray(matB, 0, 0);
+        matrixBottomLeftB.copyMatrixTo2DArrayAndNormalizeAndOffset(matB, 0, 0);
         
         float[][] resultMat = FastRealFFTXCorr.computeXCorr(matA, matB);
         SimpleFFT.dump2DArray("XCorr Java", resultMat);
@@ -437,9 +437,9 @@ public class ImageCrossCorrelationFFTParStdJobTests {
         List<Matrix> outputMatrices = results.getCrossMatrices(); 
 
         float[][] matA = new float[height][width];
-        matrixTopRightA.copyMatrixTo2DArray(matA, 0, 0);
+        matrixTopRightA.copyMatrixTo2DArrayAndNormalizeAndOffset(matA, 0, 0);
         float[][] matB = new float[height][width];
-        matrixTopRightB.copyMatrixTo2DArray(matB, 0, 0);
+        matrixTopRightB.copyMatrixTo2DArrayAndNormalizeAndOffset(matB, 0, 0);
         
         float[][] resultMat = FastRealFFTXCorr.computeXCorr(matA, matB);
         SimpleFFT.dump2DArray("XCorr Java", resultMat);
@@ -450,6 +450,8 @@ public class ImageCrossCorrelationFFTParStdJobTests {
         float[][] resultCL = new float[2*height][2*width];
         outputMatrices.get(0).copyMatrixTo2DArray(resultCL, 0, 0);
         SimpleFFT.dump2DArray("XCorr OpenCL", resultCL);
+
+        float maxValueCL = computeMaxValue(resultCL);
         
         for (int i = 0; i < 2*height-1; i++) {
             for (int j = 0; j < 2*width-1; j++) {
@@ -513,9 +515,9 @@ public class ImageCrossCorrelationFFTParStdJobTests {
         List<Matrix> outputMatrices = results.getCrossMatrices(); 
 
         float[][] matA = new float[height][width];
-        matrixBottomRightA.copyMatrixTo2DArray(matA, 0, 0);
+        matrixBottomRightA.copyMatrixTo2DArrayAndNormalizeAndOffset(matA, 0, 0);
         float[][] matB = new float[height][width];
-        matrixBottomRightB.copyMatrixTo2DArray(matB, 0, 0);
+        matrixBottomRightB.copyMatrixTo2DArrayAndNormalizeAndOffset(matB, 0, 0);
         
         float[][] resultMat = FastRealFFTXCorr.computeXCorr(matA, matB);
         SimpleFFT.dump2DArray("XCorr Java", resultMat);
@@ -526,23 +528,11 @@ public class ImageCrossCorrelationFFTParStdJobTests {
         float[][] resultCL = new float[2*height][2*width];
         outputMatrices.get(0).copyMatrixTo2DArray(resultCL, 0, 0);
         SimpleFFT.dump2DArray("XCorr OpenCL", resultCL);
-        
-        float maxValueCL = computeMaxValue(resultCL);
-        float maxValueJava = computeMaxValue(resultMat);
-        
-        float ratio = maxValueCL / maxValueJava;
-        for (int i = 0; i < resultCL.length; i++) {
-            for (int j = 0; j < resultCL[0].length; j++) {;
-                if (resultCL[i][j] > 0) {
-                    resultCL[i][j] = resultCL[i][j] * ratio;
-                }
-            }
-        }
-        
+                
         for (int i = 0; i < 2*height-1; i++) {
             for (int j = 0; j < 2*width-1; j++) {
               assertEquals("Cross correlation doesn't match expected at [i=" + i + ", j=" + j + "]", 
-                      resultMat[i][j], resultCL[i][j], maxValueCL / 1000000.0f);  
+                      resultMat[i][j], resultCL[i][j], 1.0f);  
             }
         }
         

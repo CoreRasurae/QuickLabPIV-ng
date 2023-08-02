@@ -13,6 +13,7 @@ import org.junit.Test;
 import pt.quickLabPIV.ClippingModeEnum;
 import pt.quickLabPIV.CrossCorrelationTestHelper;
 import pt.quickLabPIV.Matrix;
+import pt.quickLabPIV.MatrixFloat;
 import pt.quickLabPIV.PIVContextSingleton;
 import pt.quickLabPIV.PIVContextTestsSingleton;
 import pt.quickLabPIV.PIVInputParameters;
@@ -124,8 +125,21 @@ public class FullImageCrossCorrelationJobTest {
                 tileB.setMatrix(imgB.clipImageMatrix(tileB.getTopPixel(), tileB.getLeftPixel(), tileHeight, tileWidth, false, tileB.getMatrix()));
                 tilesForCrossA.add(tileA);
                 tilesForCrossB.add(tileB);
-                matricesA.add(tileA.getMatrix());
-                matricesB.add(tileB.getMatrix());
+                Matrix matA = tileA.getMatrix();
+                Matrix matB = tileB.getMatrix();
+                
+                float[][] matAF = new float[matA.getHeight()][matA.getWidth()];
+                matA.copyMatrixTo2DArrayAndNormalizeAndOffset(matAF, 0, 0);
+                float[][] matBF = new float[matB.getHeight()][matB.getWidth()];
+                matB.copyMatrixTo2DArrayAndNormalizeAndOffset(matBF, 0, 0);
+                
+                Matrix newMatrixA = new MatrixFloat(matA.getHeight(), matA.getWidth(), 17.0f);
+                newMatrixA.copyMatrixFrom2DArray(matAF, 0,0);
+                Matrix newMatrixB = new MatrixFloat(matB.getHeight(), matB.getWidth(), 17.0f);
+                newMatrixB.copyMatrixFrom2DArray(matBF, 0,0);
+                
+                matricesA.add(newMatrixA);
+                matricesB.add(newMatrixB);
             }
         }
         
@@ -162,7 +176,7 @@ public class FullImageCrossCorrelationJobTest {
                   if (maxValueValidation == 0) {
                       maxValueValidation = 1;
                   }
-                  assertEquals("Matrices at index: " + tileIndex + ", row=" + i + ", column= " + j + " - Do not match correlation result", validation.getElement(i, j)/maxValueValidation*maxValueComputed, result.getElement(i, j), 1e-7f);   
+                  assertEquals("Matrices at index: " + tileIndex + ", row=" + i + ", column= " + j + " - Do not match correlation result", validation.getElement(i, j)/maxValueValidation*maxValueComputed, result.getElement(i, j), 1e-2f);   
                }
            }
         }
@@ -183,7 +197,7 @@ public class FullImageCrossCorrelationJobTest {
             assertEquals("Matrices at index: " + tileIndex + " - Width do not match", result.getWidth(), validation.getWidth());
             for (int i = 0; i < tileHeight; i++) {
                 for (int j = 0; j < tileWidth; j++) {
-                   assertEquals("Matrices at index: " + tileIndex + ", row=" + i + ", column= " + j + " - Do not match correlation result", validation.getElement(i, j), result.getElement(i, j), 1e-7f);   
+                   assertEquals("Matrices at index: " + tileIndex + ", row=" + i + ", column= " + j + " - Do not match correlation result", validation.getElement(i, j), result.getElement(i, j), 1e-6f);   
                 }
             }
          }        

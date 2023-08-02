@@ -183,7 +183,7 @@ public class ImageCrossCorrelationFFTBasicJob16BitDepthTests extends ImageCrossC
 		matrixA.computeMaxValue();
 		matrixB.computeMaxValue();
 		inputMatricesF.add(matrixA);
-		inputMatricesG.add(matrixB);
+		inputMatricesG.add(matrixB);		
 		
 		CrossCorrelationFFTBasicJob jobA = new CrossCorrelationFFTBasicJob(device, false, inputMatricesF, inputMatricesG);
 		CrossCorrelationJob jobB = new CrossCorrelationJob(device, false, inputMatricesF, inputMatricesG);
