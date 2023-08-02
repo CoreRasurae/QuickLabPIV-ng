@@ -58,7 +58,7 @@ public class TileCrossCorrelationTest {
 		inputTilesF.add(tileA);
 		inputTilesG.add(tileB);
 		
-		CrossCorrelationJob job = new CrossCorrelationJob(false, gpuDevice, null);
+		CrossCorrelationJob job = new CrossCorrelationJob(false, gpuDevice, null, false);
 		job.setInputParameters(JobResultEnum.JOB_RESULT_CLIPPED_TILES_A, inputTilesF);
 		job.setInputParameters(JobResultEnum.JOB_RESULT_CLIPPED_TILES_B, inputTilesG);
 		try {
