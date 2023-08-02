@@ -310,7 +310,7 @@ public class MultiCrossCorrelationFFTJobTests {
 	    
 		CrossCorrelationFFTParStdJob job = null;
 		try {
-			job = new CrossCorrelationFFTParStdJob(gpuDevice, false, inputMatricesF, inputMatricesG);
+			job = new CrossCorrelationFFTParStdJob(gpuDevice, false, inputMatricesF, inputMatricesG, false);
 	        job.analyze();
 	        job.compute();
 		} finally {
@@ -389,7 +389,7 @@ public class MultiCrossCorrelationFFTJobTests {
 	    
 		CrossCorrelationFFTParStdJob job = null;
 		try {
-			job = new CrossCorrelationFFTParStdJob(gpuDevice, false, inputMatricesF, inputMatricesG);
+			job = new CrossCorrelationFFTParStdJob(gpuDevice, false, inputMatricesF, inputMatricesG, false);
 	        job.analyze();
 	        job.compute();
 		} finally {
@@ -470,7 +470,7 @@ public class MultiCrossCorrelationFFTJobTests {
 	    
 		CrossCorrelationFFTParStdJob job = null;
 		try {
-			job = new CrossCorrelationFFTParStdJob(false, gpuDevice, new int[] {2*4,4,2});
+			job = new CrossCorrelationFFTParStdJob(false, gpuDevice, new int[] {2*4,4,2}, false);
 			job.setInputParameters(JobResultEnum.JOB_RESULT_CLIPPED_TILES_A, inputTilesF);
 			job.setInputParameters(JobResultEnum.JOB_RESULT_CLIPPED_TILES_B, inputTilesG);
 	        job.analyze();
@@ -552,7 +552,7 @@ public class MultiCrossCorrelationFFTJobTests {
 	    
 		CrossCorrelationFFTBasicJob job = null;
 		try {
-			job = new CrossCorrelationFFTBasicJob(false, gpuDevice, new int[] {2,2,2});
+			job = new CrossCorrelationFFTBasicJob(false, gpuDevice, new int[] {2,2,2}, false);
 			job.setInputParameters(JobResultEnum.JOB_RESULT_CLIPPED_TILES_A, inputTilesF);
 			job.setInputParameters(JobResultEnum.JOB_RESULT_CLIPPED_TILES_B, inputTilesG);
 	        job.analyze();
@@ -632,7 +632,7 @@ public class MultiCrossCorrelationFFTJobTests {
 	    
 		CrossCorrelationFFTBasicJob job = null;
 		try {
-			job = new CrossCorrelationFFTBasicJob(gpuDevice, false, inputMatricesF, inputMatricesG);
+			job = new CrossCorrelationFFTBasicJob(gpuDevice, false, inputMatricesF, inputMatricesG, false);
 	        job.analyze();
 	        job.compute();
 		} finally {

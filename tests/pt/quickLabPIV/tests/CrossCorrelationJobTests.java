@@ -82,7 +82,7 @@ public class CrossCorrelationJobTests {
 	    matrixCross[2][1] = 5.5f;  //Xcorr( 1, 0)
 	    matrixCross[2][2] = 2.0f;  //Xcorr( 1, 1)
 	    
-		CrossCorrelationJob job = new CrossCorrelationJob(gpuDevice, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(gpuDevice, false, inputMatricesF, inputMatricesG, false);
         job.analyze();
         job.compute();
         
@@ -251,7 +251,7 @@ public class CrossCorrelationJobTests {
 	    matrixCross[2][1] = 5.5f;  //Xcorr( 1, 0)
 	    matrixCross[2][2] = 2.0f;  //Xcorr( 1, 1)
 	    
-		CrossCorrelationJob job = new CrossCorrelationJob(gpuDevice, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(gpuDevice, false, inputMatricesF, inputMatricesG, false);
         job.analyze();
         job.compute();
 		XCorrelationResults results = job.getJobResult(JobResultEnum.JOB_RESULT_CROSS_MATRICES);
@@ -596,7 +596,7 @@ public class CrossCorrelationJobTests {
 		inputMatricesF.add(f);
 		inputMatricesG.add(g);
 
-		CrossCorrelationJob job = new CrossCorrelationJob(gpuDevice, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(gpuDevice, false, inputMatricesF, inputMatricesG, false);
         job.analyze();
         job.compute();
 		XCorrelationResults results = job.getJobResult(JobResultEnum.JOB_RESULT_CROSS_MATRICES);
@@ -767,7 +767,7 @@ public class CrossCorrelationJobTests {
 		inputMatricesF.add(f);
 		inputMatricesG.add(g);
 
-		CrossCorrelationFFTBasicJob job = new CrossCorrelationFFTBasicJob(gpuDevice, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationFFTBasicJob job = new CrossCorrelationFFTBasicJob(gpuDevice, false, inputMatricesF, inputMatricesG, false);
         job.analyze();
         job.compute();
         XCorrelationResults results = job.getJobResult(JobResultEnum.JOB_RESULT_CROSS_MATRICES);
@@ -876,7 +876,7 @@ public class CrossCorrelationJobTests {
 		inputMatricesF.add(f);
 		inputMatricesG.add(g);
 
-		CrossCorrelationFFTParStdJob job = new CrossCorrelationFFTParStdJob(device, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationFFTParStdJob job = new CrossCorrelationFFTParStdJob(device, false, inputMatricesF, inputMatricesG, false);
         job.analyze();
         job.compute();
 		XCorrelationResults results = job.getJobResult(JobResultEnum.JOB_RESULT_CROSS_MATRICES);
@@ -941,7 +941,7 @@ public class CrossCorrelationJobTests {
 		inputMatricesF.add(f);
 		inputMatricesG.add(g);
 
-		CrossCorrelationFFTParStdJob job = new CrossCorrelationFFTParStdJob(device,false, inputMatricesF, inputMatricesG);
+		CrossCorrelationFFTParStdJob job = new CrossCorrelationFFTParStdJob(device,false, inputMatricesF, inputMatricesG, false);
         job.analyze();
         job.compute();
 		XCorrelationResults results = job.getJobResult(JobResultEnum.JOB_RESULT_CROSS_MATRICES);
@@ -1052,7 +1052,7 @@ public class CrossCorrelationJobTests {
 		inputMatricesF.add(matrixA);
 		inputMatricesG.add(matrixB);
 		
-		CrossCorrelationJob job = new CrossCorrelationJob(gpuDevice, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(gpuDevice, false, inputMatricesF, inputMatricesG, false);
         job.analyze();
         job.compute();
         
@@ -1095,7 +1095,7 @@ public class CrossCorrelationJobTests {
 		inputMatricesF.add(matrixA);
 		inputMatricesG.add(matrixB);
 		
-		CrossCorrelationJob job = new CrossCorrelationJob(cpuDevice, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(cpuDevice, false, inputMatricesF, inputMatricesG, false);
         job.analyze();
         job.compute();
         
@@ -1159,27 +1159,6 @@ public class CrossCorrelationJobTests {
         g.computeMaxValue();
         inputMatricesF.add(f);
         inputMatricesG.add(g);
-
-        //Match normalizing behavior of Matrix.copyMirroredMatrixToArrayAndNormalize(...)
-        float maxValueF = 0.0f;
-        float maxValueG = 0.0f;
-        for (int i = 0; i < matrixF.length; i++) {
-            for (int j = 0; j < matrixF[0].length; j++) {
-                if (matrixF[i][j] > maxValueF) {
-                    maxValueF = matrixF[i][j];
-                }
-                if (matrixG[i][j] > maxValueG) {
-                    maxValueG = matrixG[i][j];
-                }
-            }
-        }
-        
-        for (int i = 0; i < matrixF.length; i++) {
-            for (int j = 0; j < matrixF[0].length; j++) {
-                matrixF[i][j] = matrixF[i][j] / maxValueF * 16.0f;
-                matrixF[i][j] = matrixF[i][j] / maxValueF * 16.0f;
-            }
-        }
 
         Matrix fl = new MatrixFloat((short)4,(short)4);
         fl.copyMatrixFrom2DArray(matrixF, 0, 0);
@@ -1317,35 +1296,28 @@ public class CrossCorrelationJobTests {
         
         
         
-        float resultM[][] = new float[8][8];
-        CrossCorrelationRealFFTParStdJob job = new CrossCorrelationRealFFTParStdJob(device, false, inputMatricesF, inputMatricesG);
+        float resultMGPU[][] = new float[8][8];
+        float resultMJava[][] = new float[8][8];
+        CrossCorrelationRealFFTParStdJob job = new CrossCorrelationRealFFTParStdJob(device, false, inputMatricesF, inputMatricesG, false);
         //job.setEmulationMode(EmulationModeEnum.GPU);
         try {            
             job.analyze();
             job.compute();
             XCorrelationResults results = job.getJobResult(JobResultEnum.JOB_RESULT_CROSS_MATRICES);
             List<Matrix> outputMatrices = results.getCrossMatrices(); 
-
-            for (short i = 0;  i < resultM.length; i++) {
-                for (short j = 0; j < resultM[0].length; j++) {
-                    resultM[i][j]=results.getArray()[i * resultM[0].length + j];
-                }
-            }
-            SimpleFFT.dump2DArray("GPU computed FRe", resultM);
-            
-            //List<Matrix> outputMatricesLocal = CrossCorrelationTestHelper.localCrossCorrelation(inputMatricesF, inputMatricesG);
     
             int matrixIndex = 0;
             for (Matrix result : outputMatrices) {
-                //Matrix refMatrix = outputMatricesLocal.get(matrixIndex);
-                refMatrix.copyMatrixTo2DArray(resultM, 0, 0);
-                SimpleFFT.dump2DArray("Locally computed XCorr", resultM);                
-                result.copyMatrixTo2DArray(resultM, 0, 0);
-                SimpleFFT.dump2DArray("GPU computed XCorr", resultM);
+                Matrix refMatrixLocal = outputMatricesLocal.get(matrixIndex);
+                result.copyMatrixTo2DArray(resultMGPU, 0, 0);
+                SimpleFFT.dump2DArray("GPU computed XCorr", resultMGPU);
+                refMatrixLocal.copyMatrixTo2DArray(resultMJava, 0, 0);
+                SimpleFFT.dump2DArray("Reference XCorr", resultMJava);
+
                 for (short i = 0;  i < result.getHeight(); i++) {
                     for (short j = 0; j < result.getWidth(); j++) {
                         assertEquals("Computed cross-correlation value for matrixIndex=" + matrixIndex +
-                                ", i=" + (int)i + ", j=" + (int)j + " is wrong", refMatrix.getElement(i, j), result.getElement(i, j), 1e-3);
+                                ", i=" + (int)i + ", j=" + (int)j + " is wrong", refMatrixLocal.getElement(i, j), result.getElement(i, j), 1e-3);
                     }
                 }
                 matrixIndex++;
