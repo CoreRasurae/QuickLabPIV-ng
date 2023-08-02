@@ -4,7 +4,7 @@
 	<groupId>pt.quickLabPIV</groupId>
 	<artifactId>QuickLabPIVng</artifactId>
 	<packaging>jar</packaging>
-	<version>0.8.3</version>
+	<version>0.8.$</version>
 	<name>QuickLab PIV new generation</name>
 	<url>http://maven.apache.org</url>
 
@@ -41,8 +41,8 @@
 	</repositories>	
 	<developers>
         <developer>
-            <id>LuisPalmaNunesMendes</id>
-            <name>Luis Palma Nunes Mendes</name>
+            <id>LuisPNMendes</id>
+            <name>Luis P. N. Mendes</name>
             <email>luis.mendes@tecnico.ulisboa.pt</email>
             <url></url>
             <organization>QuickLabPIV</organization>
