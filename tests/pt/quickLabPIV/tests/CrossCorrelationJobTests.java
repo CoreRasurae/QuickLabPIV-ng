@@ -194,7 +194,7 @@ public class CrossCorrelationJobTests {
 	    matrixCross[2][1] = 5.5f;  //Xcorr( 1, 0)
 	    matrixCross[2][2] = 2.0f;  //Xcorr( 1, 1)
 	    
-		CrossCorrelationJob job = new CrossCorrelationJob(cpuDevice, false, inputMatricesF, inputMatricesG);
+		CrossCorrelationJob job = new CrossCorrelationJob(cpuDevice, false, inputMatricesF, inputMatricesG, false);
         job.analyze();
         job.compute();
 		XCorrelationResults results = job.getJobResult(JobResultEnum.JOB_RESULT_CROSS_MATRICES);
