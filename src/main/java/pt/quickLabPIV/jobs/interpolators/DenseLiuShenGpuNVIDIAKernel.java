@@ -232,16 +232,47 @@ public class DenseLiuShenGpuNVIDIAKernel extends DenseLucasKanadeGpuNVIDIAKernel
     protected void computeFixedImageDerivatives() {
         float centerPixelValueA = pixelValues[centerIdx];
         
-        A01_IIxy[0] = centerPixelValueA * (pixelValues[topIdx] - pixelValues[bottomIdx]) / 2.0f;
-        A01_IIxy[1] = centerPixelValueA * (pixelValues[leftIdx] - pixelValues[rightIdx]) / 2.0f;
+        int gidI = getGroupId(1);
+        int gidJ = getGroupId(0);
+        
+        int tidI = getLocalId(1);
+        int tidJ = getLocalId(0);
+
+        int localSizeI = getLocalSize(1);
+        int localSizeJ = getLocalSize(0);
+
+        int pixelI = mad24(gidI, localSizeI, tidI);
+        int pixelJ = mad24(gidJ, localSizeJ, tidJ);
+        
+        //Top-Left        
+        final float wTopLeft = (pixelI - 1) >= 0 && (pixelJ - 1) >= 0 && (pixelI - 1) < imageHeight && (pixelJ - 1) < imageWidth ? 1.0f : 0.0f;
+        //Top-Center
+        final float wTop = (pixelI - 1) >= 0 &&  (pixelI - 1) < imageHeight && pixelJ < imageWidth ? 1.0f : 0.0f;
+        //Top-Right
+        final float wTopRight = (pixelI - 1) >= 0 && (pixelJ + 1) >= 0 && (pixelI - 1) < imageHeight && (pixelJ + 1) < imageWidth ? 1.0f : 0.0f;
+        //Left
+        final float wLeft = (pixelJ - 1) >= 0 && pixelI < imageHeight && (pixelJ - 1) < imageWidth ? 1.0f : 0.0f;
+        //Right
+        final float wRight = pixelI < imageHeight && (pixelJ + 1) < imageWidth ? 1.0f : 0.0f;
+        //Bottom-Left
+        final float wBottomLeft = (pixelJ - 1) >= 0 && (pixelI + 1) < imageHeight && (pixelJ - 1) < imageWidth ? 1.0f : 0.0f;
+        //Bottom-Center
+        final float wBottom = (pixelI + 1) < imageHeight && pixelJ < imageWidth ? 1.0f : 0.0f;
+        //Bottom-Right
+        final float wBottomRight = (pixelI + 1) < imageHeight && (pixelJ + 1) < imageWidth ? 1.0f : 0.0f;
+        //Only if center pixel is valid
+        final float w = pixelI < imageHeight && pixelJ < imageWidth ? wTopLeft + wTop + wTopRight + wLeft + wRight + wBottomLeft + wBottom + wBottomRight : 8.0f;
+        
+        A01_IIxy[0] = centerPixelValueA * (pixelValues[topIdx]*wTop - pixelValues[bottomIdx]*wBottom) / 2.0f;
+        A01_IIxy[1] = centerPixelValueA * (pixelValues[leftIdx]*wLeft - pixelValues[rightIdx]*wRight) / 2.0f;
         A11_II[0]   = centerPixelValueA * centerPixelValueA;
-        locIPrv_Ixt[0]  = centerPixelValueA * ((pixelValues[topIdx  + 9] - pixelValues[topIdx]) - (pixelValues[bottomIdx + 9] - pixelValues[bottomIdx])) / 2.0f;
-        locJPrv_Iyt[0]  = centerPixelValueA * ((pixelValues[leftIdx + 9] - pixelValues[leftIdx]) - (pixelValues[rightIdx + 9]) - pixelValues[rightIdx]) / 2.0f;
+        locIPrv_Ixt[0]  = centerPixelValueA * (- (pixelValues[topIdx  + 9] - pixelValues[topIdx])*wTop + (pixelValues[bottomIdx + 9] - pixelValues[bottomIdx])*wBottom) / 2.0f;
+        locJPrv_Iyt[0]  = centerPixelValueA * (- (pixelValues[leftIdx + 9] - pixelValues[leftIdx])*wLeft + (pixelValues[rightIdx + 9]) - pixelValues[rightIdx])*wRight / 2.0f;
         
         //Generate inverted matrix B
-        A00_B[0] = mad(centerPixelValueA, (pixelValues[bottomIdx] + pixelValues[topIdx] - 2.0f*centerPixelValueA), - 2.0f * centerPixelValueA - lambda * 8.0f);
-        A00_B[2] = mad(centerPixelValueA, (pixelValues[rightIdx] + pixelValues[leftIdx] - 2.0f*centerPixelValueA), - 2.0f * centerPixelValueA - lambda * 8.0f); 
-        A00_B[1] = centerPixelValueA * (pixelValues[topLeftIdx] - pixelValues[topRightIdx] - pixelValues[bottomLeftIdx] + pixelValues[bottomRightIdx]) / 4.0f;
+        A00_B[0] = mad(centerPixelValueA, (pixelValues[bottomIdx]*wBottom + pixelValues[topIdx]*wTop - 2.0f*centerPixelValueA), - 2.0f * centerPixelValueA - lambda * w);
+        A00_B[2] = mad(centerPixelValueA, (pixelValues[rightIdx]*wRight + pixelValues[leftIdx]*wLeft - 2.0f*centerPixelValueA), - 2.0f * centerPixelValueA - lambda * w); 
+        A00_B[1] = centerPixelValueA * (pixelValues[topLeftIdx]*wTopLeft - pixelValues[topRightIdx]*wTopRight - pixelValues[bottomLeftIdx]*wBottomLeft + pixelValues[bottomRightIdx]*wBottomRight) / 4.0f;
         
         float detA = mad(A00_B[0], A00_B[2], - A00_B[1] * A00_B[1]);
         
@@ -302,24 +333,42 @@ public class DenseLiuShenGpuNVIDIAKernel extends DenseLucasKanadeGpuNVIDIAKernel
         int pixelI = mad24(gidI, localSizeI, tidI);
         int pixelJ = mad24(gidJ, localSizeJ, tidJ);
         int w = pixelI < imageHeight && pixelJ < imageWidth ? 1 : 0;
-     
-        float bu = mad(2.0f * A01_IIxy[0], (dI_privUs[topIdx] - dI_privUs[bottomIdx]) / 2.0f, 
-                   mad(A01_IIxy[0], (dJ_privVs[leftIdx]    - dJ_privVs[rightIdx]) / 2.0f,
-                   mad(A01_IIxy[1], (dJ_privVs[topIdx]     - dJ_privVs[bottomIdx]) / 2.0f, 
-                   mad(A11_II[0]  , (dI_privUs[topIdx]     + dI_privUs[bottomIdx]),
-                   mad(A11_II[0]  , (dJ_privVs[topLeftIdx] - dJ_privVs[topRightIdx] - dJ_privVs[bottomLeftIdx] + dJ_privVs[bottomRightIdx]) / 4.0f,
-                   mad(lambda, (dI_privUs[topLeftIdx]    + dI_privUs[topIdx] + dI_privUs[topRightIdx] +
-                                dI_privUs[leftIdx]       + dI_privUs[rightIdx] +
-                                dI_privUs[bottomLeftIdx] + dI_privUs[bottomIdx] + dI_privUs[bottomRightIdx]),  locIPrv_Ixt[0]))))));
 
-        float bv = mad(2.0f * A01_IIxy[1], (dJ_privVs[leftIdx] - dJ_privVs[rightIdx]) / 2.0f, 
-                   mad(A01_IIxy[0], (dI_privUs[leftIdx]    - dI_privUs[rightIdx]) / 2.0f, 
-                   mad(A01_IIxy[1], (dI_privUs[topIdx]     - dI_privUs[bottomIdx]) / 2.0f,
-                   mad(A11_II[0]  , (dJ_privVs[leftIdx]    + dJ_privVs[rightIdx]),
-                   mad(A11_II[0]  , (dI_privUs[topLeftIdx] - dI_privUs[topRightIdx] - dI_privUs[bottomLeftIdx] + dI_privUs[bottomRightIdx]) / 4.0f,
-                   mad(lambda, (dJ_privVs[topLeftIdx]    + dJ_privVs[topIdx]    + dJ_privVs[topRightIdx] +
-                                dJ_privVs[leftIdx]       + dJ_privVs[rightIdx]  +
-                                dJ_privVs[bottomLeftIdx] + dJ_privVs[bottomIdx] + dJ_privVs[bottomRightIdx]), locJPrv_Iyt[0]))))));
+        //Top-Left        
+        final float wTopLeft = (pixelI - 1) >= 0 && (pixelJ - 1) >= 0 && (pixelI - 1) < imageHeight && (pixelJ - 1) < imageWidth ? 1.0f : 0.0f;
+        //Top-Center
+        final float wTop = (pixelI - 1) >= 0 &&  (pixelI - 1) < imageHeight && pixelJ < imageWidth ? 1.0f : 0.0f;
+        //Top-Right
+        final float wTopRight = (pixelI - 1) >= 0 && (pixelJ + 1) >= 0 && (pixelI - 1) < imageHeight && (pixelJ + 1) < imageWidth ? 1.0f : 0.0f;
+        //Left
+        final float wLeft = (pixelJ - 1) >= 0 && pixelI < imageHeight && (pixelJ - 1) < imageWidth ? 1.0f : 0.0f;
+        //Right
+        final float wRight = pixelI < imageHeight && (pixelJ + 1) < imageWidth ? 1.0f : 0.0f;
+        //Bottom-Left
+        final float wBottomLeft = (pixelJ - 1) >= 0 && (pixelI + 1) < imageHeight && (pixelJ - 1) < imageWidth ? 1.0f : 0.0f;
+        //Bottom-Center
+        final float wBottom = (pixelI + 1) < imageHeight && pixelJ < imageWidth ? 1.0f : 0.0f;
+        //Bottom-Right
+        final float wBottomRight = (pixelI + 1) < imageHeight && (pixelJ + 1) < imageWidth ? 1.0f : 0.0f;
+
+        
+        float bu = mad(2.0f * A01_IIxy[0], (dI_privUs[topIdx]*wTop - dI_privUs[bottomIdx]*wBottom) / 2.0f, 
+                   mad(A01_IIxy[0], (dJ_privVs[leftIdx]*wLeft    - dJ_privVs[rightIdx]*wRight) / 2.0f,
+                   mad(A01_IIxy[1], (dJ_privVs[topIdx]*wTop     - dJ_privVs[bottomIdx]*wBottom) / 2.0f, 
+                   mad(A11_II[0]  , (dI_privUs[topIdx]*wTop     + dI_privUs[bottomIdx]*wBottom),
+                   mad(A11_II[0]  , (dJ_privVs[topLeftIdx]*wTopLeft - dJ_privVs[topRightIdx]*wTopRight - dJ_privVs[bottomLeftIdx]*wBottomLeft + dJ_privVs[bottomRightIdx]*wBottomRight) / 4.0f,
+                   mad(lambda, (dI_privUs[topLeftIdx]*wTopLeft    + dI_privUs[topIdx]*wTop + dI_privUs[topRightIdx]*wTopRight +
+                                dI_privUs[leftIdx]*wLeft       + dI_privUs[rightIdx]*wRight +
+                                dI_privUs[bottomLeftIdx]*wBottomLeft + dI_privUs[bottomIdx]*wBottom + dI_privUs[bottomRightIdx]*wBottomRight),  locIPrv_Ixt[0]))))));
+
+        float bv = mad(2.0f * A01_IIxy[1], (dJ_privVs[leftIdx]*wLeft - dJ_privVs[rightIdx]*wRight) / 2.0f, 
+                   mad(A01_IIxy[0], (dI_privUs[leftIdx]*wLeft    - dI_privUs[rightIdx]*wRight) / 2.0f, 
+                   mad(A01_IIxy[1], (dI_privUs[topIdx]*wTop     - dI_privUs[bottomIdx]*wBottom) / 2.0f,
+                   mad(A11_II[0]  , (dJ_privVs[leftIdx]*wLeft    + dJ_privVs[rightIdx]*wRight),
+                   mad(A11_II[0]  , (dI_privUs[topLeftIdx]*wTopLeft - dI_privUs[topRightIdx]*wTopRight - dI_privUs[bottomLeftIdx]*wBottomLeft + dI_privUs[bottomRightIdx]*wBottomRight) / 4.0f,
+                   mad(lambda, (dJ_privVs[topLeftIdx]*wTopLeft    + dJ_privVs[topIdx]*wTop    + dJ_privVs[topRightIdx]*wTopRight +
+                                dJ_privVs[leftIdx]*wLeft       + dJ_privVs[rightIdx]*wRight  +
+                                dJ_privVs[bottomLeftIdx]*wBottomLeft + dJ_privVs[bottomIdx]*wBottom + dJ_privVs[bottomRightIdx]*wBottomRight), locJPrv_Iyt[0]))))));
 
         float unew = -mad(A00_B[0], bu, A00_B[1]*bv);
         float vnew = -mad(A00_B[1], bu, A00_B[2]*bv);
