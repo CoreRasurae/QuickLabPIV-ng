@@ -266,7 +266,7 @@ public class DenseLiuShenGpuNVIDIAKernel extends DenseLucasKanadeGpuNVIDIAKernel
             for (int j = 0; j < 3; j++) {
                 int localIdx = mad24(i + tidI, width, j + tidJ);
                 int idx = mad24(i, 3, j);
-                dI_privUs[idx] = localImgBuffer[localIdx];
+                dJ_privVs[idx] = localImgBuffer[localIdx];
             }
         }
         //Avoid partial threads from updating the local buffer, before all threads have read from it
@@ -277,7 +277,7 @@ public class DenseLiuShenGpuNVIDIAKernel extends DenseLucasKanadeGpuNVIDIAKernel
             for (int j = 0; j < 3; j++) {
                 int localIdx = mad24(i + tidI, width, j + tidJ);
                 int idx = mad24(i, 3, j);
-                dJ_privVs[idx] = localImgBuffer[localIdx];
+                dI_privUs[idx] = localImgBuffer[localIdx];
             }
         }
         //Avoid partial threads from updating the local buffer, before all threads have read from it        
@@ -361,8 +361,8 @@ public class DenseLiuShenGpuNVIDIAKernel extends DenseLucasKanadeGpuNVIDIAKernel
                 int w = pixelI < imageHeight && pixelJ < imageWidth ? 1 : 0;
 
                 if (w == 1) {
-                    us[idx] = usNew[idx];
-                    vs[idx] = vsNew[idx];
+                    us[idx] = vsNew[idx];
+                    vs[idx] = usNew[idx];
                 }       
             }
         }        
