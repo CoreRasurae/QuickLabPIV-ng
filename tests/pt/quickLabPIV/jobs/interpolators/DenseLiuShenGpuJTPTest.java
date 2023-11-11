@@ -22,6 +22,8 @@ import org.junit.Test;
 import com.aparapi.Range;
 import com.aparapi.device.Device;
 import com.aparapi.device.JavaDevice;
+import com.aparapi.exception.AparapiKernelFailedException;
+import com.aparapi.internal.exception.AparapiException;
 import com.aparapi.internal.kernel.KernelManager;
 
 import pt.quickLabPIV.Matrix;
@@ -132,7 +134,7 @@ public class DenseLiuShenGpuJTPTest {
     }
     
     @Test
-    public void testImageToLocalImgBufferDirectTestPass() {
+    public void testImageToLocalImgBufferDirectTestPass() throws Throwable {
         IImage img1 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_0.tif");
         IImage img2 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_1.tif");
         
@@ -194,6 +196,9 @@ public class DenseLiuShenGpuJTPTest {
         float[][] totalErrorVal = new float[imageHeight][imageWidth];
         final float lambda = 1000.0f;
         int iterationsLK = 1;        
+        
+        //Crucial initialization for the JTP test to have any meaningful result, otherwise Liu-Shen will end before the first iteration
+        Arrays.fill(totalError, 1e8f);
         
         computeValidationUsAndVs(img1, img2, iixVal, iiyVal, iiVal, ixtVal, iytVal, b00Val, b01Val, b11Val, usLiuInVal, vsLiuInVal, usLiuOutVal, vsLiuOutVal, 1, false);
         
@@ -327,13 +332,19 @@ public class DenseLiuShenGpuJTPTest {
                 assertEquals("totalError does not match", totalErrorResultVal, totalErrorGlobal[0], 1e-5f);
             }
         }.setImages(imgLS1, imgLS2));
-        
-        kernel.execute(Range.create2D(globalSizeJ, globalSizeI, localSizeJ, localSizeI), 2);
 
+        try {
+            kernel.execute(Range.create2D(globalSizeJ, globalSizeI, localSizeJ, localSizeI), 2);
+        } catch (AparapiKernelFailedException ex) {
+            if (ex.getCause().getClass().equals(AssertionError.class)) {
+                throw ex.getCause();
+            }
+            throw ex;
+        }
     }
 
     @Test
-    public void testImageToLocalImgBufferOffsetTestPass() {
+    public void testImageToLocalImgBufferOffsetTestPass() throws Throwable {
         IImage img1 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_0.tif");
         IImage img2 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_1.tif");
         
@@ -396,6 +407,9 @@ public class DenseLiuShenGpuJTPTest {
         float[][] totalErrorVal = new float[imageHeight][imageWidth];
         final float lambda = 1000.0f;
         int iterationsLK = 1;
+
+        //Crucial initialization for the JTP test to have any meaningful result, otherwise Liu-Shen will end before the first iteration
+        Arrays.fill(totalError, 1e8f);
         
         computeValidationUsAndVs(img1, img2, iixVal, iiyVal, iiVal, ixtVal, iytVal, b00Val, b01Val, b11Val, usLiuInVal, vsLiuInVal, usLiuOutVal, vsLiuOutVal, 1, true);
         
@@ -527,8 +541,15 @@ public class DenseLiuShenGpuJTPTest {
                 assertEquals("totalError does not match", totalErrorResultVal, totalErrorGlobal[0], 1e-5f);
             }
         }.setImages(imgLS1, imgLS2));
-        
-        kernel.execute(Range.create2D(globalSizeJ, globalSizeI, localSizeJ, localSizeI), 2);
+
+        try {
+            kernel.execute(Range.create2D(globalSizeJ, globalSizeI, localSizeJ, localSizeI), 2);
+        } catch (AparapiKernelFailedException ex) {
+            if (ex.getCause().getClass().equals(AssertionError.class)) {
+                throw ex.getCause();
+            }
+            throw ex;
+        }
     }
 
     public float getNearestPixel(IImage img, int i, int j) {
