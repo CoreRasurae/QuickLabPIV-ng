@@ -515,6 +515,7 @@ public class DenseLucasKanadeGpuKernel extends Kernel implements IDenseLucasKana
     }
     
     protected void computeBs(int blockIdxI, int blockIdxJ) {
+        //Cannot contain localBarrier() because method is called from within an if condition that is not static for the local group.
         final int blockOffset = blockIdxI * blockSizeJ + blockIdxJ;
                 
         int tidI = getLocalId(1);
@@ -565,7 +566,6 @@ public class DenseLucasKanadeGpuKernel extends Kernel implements IDenseLucasKana
                         mad(dT, dI_privUs[idxSource], multiWorkBuffer[idxTarget + b1sOffset]);
             }
         }
-        localBarrier();
     }
    
     @NoCL
@@ -703,6 +703,7 @@ public class DenseLucasKanadeGpuKernel extends Kernel implements IDenseLucasKana
                     if (status[Aindex] == 1) {
                         computeBs(blockIdxI, blockIdxJ);
                     }
+                    localBarrier();
                 }
             }
 
