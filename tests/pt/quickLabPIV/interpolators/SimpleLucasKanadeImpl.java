@@ -17,9 +17,6 @@ import pt.quickLabPIV.images.IImage;
 import pt.quickLabPIV.images.ImageFloat;
 import pt.quickLabPIV.images.filters.GaussianFilter2D;
 import pt.quickLabPIV.images.filters.IFilter;
-import pt.quickLabPIV.interpolators.IOpticalFlowInterpolator;
-import pt.quickLabPIV.interpolators.InterpolatorStateException;
-import pt.quickLabPIV.interpolators.LucasKanadeInterpolatorConfiguration;
 import pt.quickLabPIV.jobs.NotImplementedException;
 import pt.quickLabPIV.maximum.MaxCrossResult;
 
@@ -162,15 +159,15 @@ public class SimpleLucasKanadeImpl implements IOpticalFlowInterpolator {
                 int localJ = j + windowSize/2;
                 patch[localI][localJ] = getNearestPixelWithWarp(img, i + locI, j + locJ);
                 if (dIs != null && dJs != null && A00s != null && A01s != null && A11s != null) {
-                    double dI = 3.0 * (getNearestPixelWithWarp(img, locI + i + 1, locJ + j - 1) + getNearestPixelWithWarp(img, locI + i + 1, locJ + j + 1) -
-                                       getNearestPixelWithWarp(img, locI + i - 1, locJ + j - 1) - getNearestPixelWithWarp(img, locI + i - 1, locJ + j + 1)) +
-                               10.0 * (getNearestPixelWithWarp(img, locI + i + 1, locJ + j) - getNearestPixelWithWarp(img, locI + i - 1, locJ + j));
-                    dI *= -1.0 / 32.0;
+                    double dI = 3.0 * (getNearestPixelWithWarp(img, locI + i - 1, locJ + j - 1) + getNearestPixelWithWarp(img, locI + i - 1, locJ + j + 1) -
+                                       getNearestPixelWithWarp(img, locI + i + 1, locJ + j - 1) - getNearestPixelWithWarp(img, locI + i + 1, locJ + j + 1)) +
+                               10.0 * (getNearestPixelWithWarp(img, locI + i - 1, locJ + j) - getNearestPixelWithWarp(img, locI + i + 1, locJ + j));
+                    dI *= 1.0 / 32.0;
                     
-                    double dJ = 3.0 * (getNearestPixelWithWarp(img, locI + i - 1, locJ + j + 1) + getNearestPixelWithWarp(img, locI + i + 1, locJ + j + 1) -
-                                       getNearestPixelWithWarp(img, locI + i - 1, locJ + j - 1) - getNearestPixelWithWarp(img, locI + i + 1, locJ + j - 1)) +
-                                10.0 * (getNearestPixelWithWarp(img, locI + i, locJ + j + 1) - getNearestPixelWithWarp(img, locI + i, locJ + j - 1));
-                    dJ *= -1.0 / 32.0;
+                    double dJ = 3.0 * (getNearestPixelWithWarp(img, locI + i - 1, locJ + j - 1) + getNearestPixelWithWarp(img, locI + i + 1, locJ + j - 1) -
+                                       getNearestPixelWithWarp(img, locI + i - 1, locJ + j + 1) - getNearestPixelWithWarp(img, locI + i + 1, locJ + j + 1)) +
+                                10.0 * (getNearestPixelWithWarp(img, locI + i, locJ + j - 1) - getNearestPixelWithWarp(img, locI + i, locJ + j + 1));
+                    dJ *= 1.0 / 32.0;
                     
                     dIs[localI][localJ] = dI;
                     dJs[localI][localJ] = dJ;
@@ -293,12 +290,12 @@ public class SimpleLucasKanadeImpl implements IOpticalFlowInterpolator {
                     break;
                 }
                 
-                if (vLoc < -windowSize/2 || vLoc >= imgA.getHeight() + windowSize/2) {
+                if (vLoc < 0 || vLoc >= imgA.getHeight() + windowSize/2) {
                     status[idx] = false;
                     break;
                 }
                 
-                if (hLoc < -windowSize/2 || hLoc >= imgA.getWidth() + windowSize/2) {
+                if (hLoc < 0 || hLoc >= imgA.getWidth() + windowSize/2) {
                     status[idx] = false;
                     break;
                 }
@@ -454,26 +451,26 @@ public class SimpleLucasKanadeImpl implements IOpticalFlowInterpolator {
         throw new NotImplementedException("Method not implemented");
     }
 
-    public double[] interpolate(double vCenter, double hCenter, double u, double v) {
-        if (!avgOf4) {
+    public double[] interpolate(double vCenter, double hCenter, double v, double u, boolean halfPixelOffset) {
+        if (!avgOf4 && halfPixelOffset) {
             vCenter += 0.5;
             hCenter += 0.5;
         }
 
         computeMatrixAInv(vCenter, hCenter);
 
-        double vLocInitial = vCenter + u;
-        double hLocInitial = hCenter + v;        
+        double vLocInitial = vCenter + v;
+        double hLocInitial = hCenter + u;        
         
         double velocities[] = new double[2];
-        velocities[0] = 0.0; //U
-        velocities[1] = 0.0; //V
+        velocities[0] = 0.0; //V
+        velocities[1] = 0.0; //U
         
         computeVs(vLocInitial, hLocInitial, velocities);
 
         //Discard velocities accumulation in AvgOf4 mode
-        velocities[0] = Vs[0] - vCenter;
-        velocities[1] = Us[0] - hCenter;
+        velocities[0] = velocities[0] - vCenter;
+        velocities[1] = velocities[1] - hCenter;
                 
         return velocities;
     }

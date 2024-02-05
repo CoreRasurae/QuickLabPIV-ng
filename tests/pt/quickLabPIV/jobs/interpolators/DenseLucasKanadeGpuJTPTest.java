@@ -23,20 +23,12 @@ import com.aparapi.device.JavaDevice;
 import com.aparapi.internal.kernel.KernelManager;
 
 import pt.quickLabPIV.Matrix;
-import pt.quickLabPIV.PIVContextSingleton;
-import pt.quickLabPIV.PIVContextTestsSingleton;
-import pt.quickLabPIV.PIVInputParameters;
-import pt.quickLabPIV.device.ComputationDevice;
-import pt.quickLabPIV.device.DeviceManager;
 import pt.quickLabPIV.images.IImage;
 import pt.quickLabPIV.images.ImageFloat;
 import pt.quickLabPIV.images.ImageTestHelper;
 import pt.quickLabPIV.images.filters.GaussianFilter2D;
 import pt.quickLabPIV.images.filters.IFilter;
-import pt.quickLabPIV.interpolators.LiuShenFloat;
-import pt.quickLabPIV.interpolators.LiuShenInterpolatorConfiguration;
 import pt.quickLabPIV.interpolators.SimpleLucasKanadeImpl;
-import pt.quickLabPIV.jobs.JobResultEnum;
 import pt.quickLabPIV.jobs.interpolators.DenseLucasKanadeGpuTestKernel.IDenseLucasKanadeListener;
 
 public class DenseLucasKanadeGpuJTPTest {
@@ -332,6 +324,8 @@ public class DenseLucasKanadeGpuJTPTest {
         img1 = filter.applyFilter(img1, img1);
         img2 = filter.applyFilter(img2, img2);
 
+        final boolean halfPixelOffset = false;
+        
         //Setup the new size
         imageHeight = windowSize + blockSizeI-1 + 3;
         imageWidth  = windowSize + blockSizeJ-1 + 3;
@@ -366,7 +360,7 @@ public class DenseLucasKanadeGpuJTPTest {
                 double tempDIs[][][] = new double[4][windowSize][windowSize];
                 double tempDJs[][][] = new double[4][windowSize][windowSize];
                 double tempPatch1[][][] = new double[4][windowSize][windowSize];
-                double tempA[][] = computeTestMatrixAAtLoc(img1, img2, i, j, tempAInv, tempDIs, tempDJs, tempPatch1, tempB0s, tempB1s);
+                double tempA[][] = computeTestMatrixAAtLoc(img1, img2, i, j, tempAInv, tempDIs, tempDJs, tempPatch1, tempB0s, tempB1s, halfPixelOffset);
                 A[i][j][0] = (float)tempA[0][0];
                 A[i][j][1] = (float)tempA[0][1];
                 A[i][j][2] = (float)tempA[0][2];
@@ -465,7 +459,7 @@ public class DenseLucasKanadeGpuJTPTest {
             }
         });
         
-        kernel.setKernelArgs(imageA, imageB, us, vs, false);
+        kernel.setKernelArgs(imageA, imageB, us, vs, halfPixelOffset);
         
         kernel.execute(Range.create2D(globalSizeJ, globalSizeI, localSizeJ, localSizeI));
 
@@ -481,6 +475,8 @@ public class DenseLucasKanadeGpuJTPTest {
         img1 = filter.applyFilter(img1, img1);
         img2 = filter.applyFilter(img2, img2);
 
+        final boolean halfPixelOffset = false;
+        
         //Setup the new size
         imageHeight = windowSize + blockSizeI-1 + 3;
         imageWidth  = windowSize + blockSizeJ-1 + 3;
@@ -515,7 +511,7 @@ public class DenseLucasKanadeGpuJTPTest {
                 double tempDIs[][][] = new double[4][windowSize][windowSize];
                 double tempDJs[][][] = new double[4][windowSize][windowSize];
                 double tempPatch1[][][] = new double[4][windowSize][windowSize];
-                double tempA[][] = computeTestMatrixAAtLoc(img1, img2, i, j, tempAInv, tempDIs, tempDJs, tempPatch1, tempB0s, tempB1s);
+                double tempA[][] = computeTestMatrixAAtLoc(img1, img2, i, j, tempAInv, tempDIs, tempDJs, tempPatch1, tempB0s, tempB1s, halfPixelOffset);
                 A[i][j][0] = (float)tempA[0][0];
                 A[i][j][1] = (float)tempA[0][1];
                 A[i][j][2] = (float)tempA[0][2];
@@ -570,7 +566,7 @@ public class DenseLucasKanadeGpuJTPTest {
                 for (int i = 0; i < blockSizeI; i++) {
                     for (int j = 0; j < blockSizeJ; j++) {
                         if (locI + i < A.length && locJ + j < A[0].length) {
-                            checkAMatrices(locI + i, locJ + j, A[locI + i][locJ + j], A00[i * blockSizeJ + j], A01[i * blockSizeJ + j], A11[i * blockSizeJ + j], false);
+                            checkAMatrices(locI + i, locJ + j, A[locI + i][locJ + j], A00[i * blockSizeJ + j], A01[i * blockSizeJ + j], A11[i * blockSizeJ + j], halfPixelOffset);
                         }
                     }
                 }
@@ -617,7 +613,7 @@ public class DenseLucasKanadeGpuJTPTest {
             }
         });
         
-        kernel.setKernelArgs(imageA, imageB, us, vs, false);
+        kernel.setKernelArgs(imageA, imageB, us, vs, halfPixelOffset);
         
         kernel.execute(Range.create2D(globalSizeJ, globalSizeI, localSizeJ, localSizeI));
 
@@ -659,7 +655,8 @@ public class DenseLucasKanadeGpuJTPTest {
         float testUs[][] = new float[blockSizeI + 1][blockSizeJ + 1];
         float testVs[][] = new float[blockSizeI + 1][blockSizeJ + 1];
         
-        computeTestVelocities(img1, img2, testUs, testVs);
+        final boolean halfPixelOffset = false; 
+        computeTestVelocities(img1, img2, testUs, testVs, halfPixelOffset);
         
         float us[] = new float[imageWidth * imageHeight];
         float vs[] = new float[imageWidth * imageHeight];
@@ -668,7 +665,7 @@ public class DenseLucasKanadeGpuJTPTest {
                                                                                  blockItemsPerWorkGroupI, blockItemsPerWorkGroupJ, 
                                                                                  windowSize, iterations, imageHeight, imageWidth);
 
-        kernel.setKernelArgs(imageA, imageB, us, vs, false);
+        kernel.setKernelArgs(imageA, imageB, us, vs, halfPixelOffset);
         
         kernel.execute(Range.create2D(globalSizeJ, globalSizeI, localSizeJ, localSizeI));
         us = kernel.getUs();
@@ -686,13 +683,13 @@ public class DenseLucasKanadeGpuJTPTest {
         }
     }
     
-    private void computeTestVelocities(IImage img1, IImage img2, float[][] testUs, float[][] testVs) {
-        SimpleLucasKanadeImpl impl = new SimpleLucasKanadeImpl(0.0f, 3, true, windowSize, 1);
+    private void computeTestVelocities(IImage img1, IImage img2, float[][] testUs, float[][] testVs, boolean halfPixelOffset) {
+        SimpleLucasKanadeImpl impl = new SimpleLucasKanadeImpl(0.0f, 3, false, windowSize, iterations);
         impl.updateImageA(img1);
         impl.updateImageB(img2);
         for (int locI = 0; locI < blockSizeI + 1; locI++) {
             for (int locJ = 0; locJ < blockSizeJ + 1; locJ++) {
-                double velocities[] = impl.interpolate(locI, locJ, 0.0f, 0.0f);
+                double velocities[] = impl.interpolate(locI, locJ, 0.0f, 0.0f, halfPixelOffset);
                 testVs[locI][locJ] = (float)velocities[0];
                 testUs[locI][locJ] = (float)velocities[1];
             }
@@ -736,11 +733,11 @@ public class DenseLucasKanadeGpuJTPTest {
     }
     
     private double[][] computeTestMatrixAAtLoc(IImage img1, IImage img2, double locI, double locJ, 
-                                               double AInv[][], double[][][] DIs, double DJs[][][], double patch1[][][], double B0s[], double B1s[]) {
-        SimpleLucasKanadeImpl impl = new SimpleLucasKanadeImpl(0.0f, 3, true, windowSize, 1);
+                                               double AInv[][], double[][][] DIs, double DJs[][][], double patch1[][][], double B0s[], double B1s[], boolean halfPixelOffset) {
+        SimpleLucasKanadeImpl impl = new SimpleLucasKanadeImpl(0.0f, 3, false, windowSize, iterations);
         impl.updateImageA(img1);
         impl.updateImageB(img2);
-        impl.interpolate(locI, locJ, 0.0f, 0.0f);
+        impl.interpolate(locI, locJ, 0.0f, 0.0f, halfPixelOffset);
         
         double A[][] = impl.getA();
         double Inv[][] = impl.getInvA();

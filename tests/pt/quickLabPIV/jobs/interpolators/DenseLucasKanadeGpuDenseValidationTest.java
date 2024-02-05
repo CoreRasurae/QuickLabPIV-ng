@@ -26,9 +26,6 @@ import pt.quickLabPIV.images.filters.IFilter;
 import pt.quickLabPIV.interpolators.LucasKanadeFloat;
 import pt.quickLabPIV.interpolators.SimpleLucasKanadeImpl;
 import pt.quickLabPIV.jobs.JobResultEnum;
-import pt.quickLabPIV.jobs.interpolators.DenseLucasKanadeAparapiJob;
-import pt.quickLabPIV.jobs.interpolators.LucasKanadeOptions;
-import pt.quickLabPIV.jobs.interpolators.OpticalFlowInterpolatorInput;
 
 public class DenseLucasKanadeGpuDenseValidationTest {
     private final static ComputationDevice gpuDevice = DeviceManager.getSingleton().getGPU();
@@ -175,6 +172,12 @@ public class DenseLucasKanadeGpuDenseValidationTest {
     //differences found.
     //@Test
     public void denseLucasKanadeValidationWith5Iteration() throws IOException {
+        int uIndexB = SimpleFloatMatrixImporterExporter.getMatrixIndexFromName(filename, "before5_u");
+        int vIndexB = SimpleFloatMatrixImporterExporter.getMatrixIndexFromName(filename, "before5_v");
+
+        beforeU = SimpleFloatMatrixImporterExporter.readFromFormattedFile(filename, uIndexB);
+        beforeV = SimpleFloatMatrixImporterExporter.readFromFormattedFile(filename, vIndexB);
+        
         int uIndex = SimpleFloatMatrixImporterExporter.getMatrixIndexFromName(filename, "after5_u");
         int vIndex = SimpleFloatMatrixImporterExporter.getMatrixIndexFromName(filename, "after5_v");
 
@@ -203,7 +206,7 @@ public class DenseLucasKanadeGpuDenseValidationTest {
         assumeTrue("No OpenCL GPU device is available", gpuDevice != null);
         
         IImage img1 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_0.tif");
-        IImage img2 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_1.tif");        
+        IImage img2 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_1.tif");
         img1 = ImageFloat.convertFrom(img1);
         img2 = ImageFloat.convertFrom(img2);
         IFilter filter = new GaussianFilter2D(2.0f, 3);
@@ -216,8 +219,8 @@ public class DenseLucasKanadeGpuDenseValidationTest {
                 float validationPixelB = imageB[i][j];
                 float checkA = img1.readPixel(i, j);
                 float checkB = img2.readPixel(i, j);
-                assertEquals("Image A diffferent than expected at I:" + i + ", J:" + j, validationPixelA, checkA, 1e-2f);
-                assertEquals("Image B diffferent than expected at I:" + i + ", J:" + j, validationPixelB, checkB, 1e-2f);
+                assertEquals("Image A diffferent than expected at I:" + i + ", J:" + j, validationPixelA, checkA, 1e-3f);
+                assertEquals("Image B diffferent than expected at I:" + i + ", J:" + j, validationPixelB, checkB, 1e-3f);
             }
         }
         
@@ -246,15 +249,15 @@ public class DenseLucasKanadeGpuDenseValidationTest {
         us = jobResult.us;
         vs = jobResult.vs;
         
-        for (int i = 8; i < img1.getHeight() - 8; i++) {
-            for (int j = 8; j < img1.getWidth() - 8; j++) {
+        for (int i = 0; i < img1.getHeight(); i++) {
+            for (int j = 0; j < img1.getWidth(); j++) {
                 int idx = i * img1.getWidth() + j;
                 float validationU = afterU[i][j];
                 float validationV = afterV[i][j];
                 float checkU = us[idx];
                 float checkV = vs[idx];
-                assertEquals("Velocity U diffferent than expected at I:" + i + ", J:" + j, validationU, checkU, 1e-2f);
-                assertEquals("Velocity V diffferent than expected at I:" + i + ", J:" + j, validationV, checkV, 1e-2f);
+                assertEquals("Velocity U diffferent than expected at I:" + i + ", J:" + j, validationU, checkU, 6e-3f);
+                assertEquals("Velocity V diffferent than expected at I:" + i + ", J:" + j, validationV, checkV, 6e-3f);
             }
         }
     }
@@ -298,14 +301,14 @@ public class DenseLucasKanadeGpuDenseValidationTest {
         IImage img1T = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_0.tif");
         IImage img2T = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_1.tif");        
 
-        SimpleLucasKanadeImpl testImpl = new SimpleLucasKanadeImpl(2.0f, 3, true, 27, iterations);
+        SimpleLucasKanadeImpl testImpl = new SimpleLucasKanadeImpl(2.0f, 3, false, 27, iterations);
         testImpl.updateImageA(img1T);
         testImpl.updateImageB(img2T);
 
         for (int i = 8; i < img1.getHeight() - 8; i++) {
             for (int j = 8; j < img1.getWidth() - 8; j++) {
                 int idx = i * img1.getWidth() + j;
-                double Us[] = testImpl.interpolate(i, j, beforeV[i][j], beforeU[i][j]);
+                double Us[] = testImpl.interpolate(i, j, beforeV[i][j], beforeU[i][j], false);
                 float validationU = (float)Us[1];
                 float validationV = (float)Us[0];
                 float checkU = us[idx];
@@ -362,7 +365,7 @@ public class DenseLucasKanadeGpuDenseValidationTest {
         for (int i = 8; i < img1.getHeight() - 8; i++) {
             for (int j = 8; j < img1.getWidth() - 8; j++) {
                 int idx = i * img1.getWidth() + j;
-                double Us[] = testImpl.interpolate(i, j, beforeV[i][j], beforeU[i][j]);
+                double Us[] = testImpl.interpolate(i, j, beforeV[i][j], beforeU[i][j], true);
                 float validationU = (float)Us[1];
                 float validationV = (float)Us[0];
                 float checkU = us[idx];
@@ -377,7 +380,7 @@ public class DenseLucasKanadeGpuDenseValidationTest {
         IImage img1 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_0.tif");
         IImage img2 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_1.tif");
 
-        SimpleLucasKanadeImpl testImpl = new SimpleLucasKanadeImpl(2.0f, 3, true, 27, iterations);
+        SimpleLucasKanadeImpl testImpl = new SimpleLucasKanadeImpl(2.0f, 3, false, 27, iterations);
         testImpl.updateImageA(img1);
         testImpl.updateImageB(img2);
 
@@ -385,7 +388,7 @@ public class DenseLucasKanadeGpuDenseValidationTest {
             for (int j = 8; j < img1.getWidth() - 8; j++) {
                 float validationU = afterU[i][j];
                 float validationV = afterV[i][j];
-                double Us[] = testImpl.interpolate(i, j, beforeV[i][j], beforeU[i][j]);
+                double Us[] = testImpl.interpolate(i, j, beforeV[i][j], beforeU[i][j], false);
                 float checkU = (float)Us[1];
                 float checkV = (float)Us[0];
                 assertEquals("Velocity U diffferent than expected at I:" + i + ", J:" + j, validationU, checkU, 1e-2f);
@@ -438,16 +441,16 @@ public class DenseLucasKanadeGpuDenseValidationTest {
         
         float validationU[] = new float[1];
         float validationV[] = new float[1];
-        for (int i = 8; i < img1.getHeight() - 8; i++) {
-            for (int j = 8; j < img1.getWidth() - 8; j++) {                
+        for (int i = 0; i < img1.getHeight(); i++) {
+            for (int j = 0; j < img1.getWidth(); j++) {                
                 int idx = i * img1.getWidth() + j;
 
                 float checkU = us[idx];
                 float checkV = vs[idx];
 
                 lk.getVelocitiesMatrix(i, j, i + beforeV[i][j], j + beforeU[i][j], validationU, validationV);
-                assertEquals("Velocity U diffferent than expected at I:" + i + ", J:" + j, validationU[0], checkU, 1.4e-2f);
-                assertEquals("Velocity V diffferent than expected at I:" + i + ", J:" + j, validationV[0], checkV, 1.4e-2f);
+                assertEquals("Velocity U diffferent than expected at I:" + i + ", J:" + j, validationU[0], checkU, 1.1e-2f);
+                assertEquals("Velocity V diffferent than expected at I:" + i + ", J:" + j, validationV[0], checkV, 1.1e-2f);
 
             }
         }

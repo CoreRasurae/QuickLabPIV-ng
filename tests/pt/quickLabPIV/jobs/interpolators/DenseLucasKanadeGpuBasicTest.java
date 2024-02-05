@@ -14,15 +14,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import pt.quickLabPIV.Matrix;
-import pt.quickLabPIV.MatrixFloat;
-import pt.quickLabPIV.exporter.InvalidStateException;
 import pt.quickLabPIV.images.IImage;
 import pt.quickLabPIV.images.ImageFloat;
 import pt.quickLabPIV.images.ImageTestHelper;
 import pt.quickLabPIV.images.filters.GaussianFilter2D;
 import pt.quickLabPIV.images.filters.IFilter;
 import pt.quickLabPIV.interpolators.SimpleLucasKanadeImpl;
-import pt.quickLabPIV.jobs.xcorr.SimpleFFT;
 
 public class DenseLucasKanadeGpuBasicTest {
     private int blockItemsPerWorkGroupI;
@@ -232,7 +229,7 @@ public class DenseLucasKanadeGpuBasicTest {
     }
 
     @Test
-    public void computeDerivatesDirectTestPass() {
+    public void computeDerivatesDirectTestPass() {                
         IImage img1 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_0.tif");
         IImage img2 = ImageTestHelper.getImage("testFiles" + File.separator + "rankine_vortex01_1.tif");
         
@@ -250,7 +247,8 @@ public class DenseLucasKanadeGpuBasicTest {
         float A[][][] = new float[blockSizeI + 1][blockSizeJ + 1][3];
         for (int i = 0; i < blockSizeI + 1; i++) {
             for (int j = 0; j < blockSizeJ + 1; j++) {
-                double tempA[][] = computeTestMatrixAAtLoc(img1, img2, i, j);
+                final boolean halfPixelOffset = false;
+                double tempA[][] = computeTestMatrixAAtLoc(img1, img2, i, j, halfPixelOffset);
                 A[i][j][0] = (float)tempA[0][0];
                 A[i][j][1] = (float)tempA[0][1];
                 A[i][j][2] = (float)tempA[0][2];
@@ -321,11 +319,11 @@ public class DenseLucasKanadeGpuBasicTest {
         assertEquals("Value for A11 does not match the expected at pixel location I:"+ locI + ", J: " + locJ, testA[2], A11, 1e-2);
     }
 
-    private double[][] computeTestMatrixAAtLoc(IImage img1, IImage img2, double locI, double locJ) {
-        SimpleLucasKanadeImpl impl = new SimpleLucasKanadeImpl(0.0f, 3, true, windowSize, 5);
+    private double[][] computeTestMatrixAAtLoc(IImage img1, IImage img2, double locI, double locJ, boolean halfPixelOffset) {
+        SimpleLucasKanadeImpl impl = new SimpleLucasKanadeImpl(0.0f, 3, false, windowSize, 5);
         impl.updateImageA(img1);
         impl.updateImageB(img2);
-        impl.interpolate(locI, locJ, 0.0f, 0.0f);
+        impl.interpolate(locI, locJ, 0.0f, 0.0f, halfPixelOffset);
         double A[][] = impl.getA();
         return A;
     }

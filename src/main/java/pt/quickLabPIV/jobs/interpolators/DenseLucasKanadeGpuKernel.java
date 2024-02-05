@@ -7,9 +7,6 @@
 package pt.quickLabPIV.jobs.interpolators;
 
 import com.aparapi.Kernel;
-import com.aparapi.Kernel.Local;
-import com.aparapi.Kernel.NoCL;
-import com.aparapi.Kernel.PrivateMemorySpace;
 
 public class DenseLucasKanadeGpuKernel extends Kernel implements IDenseLucasKanadeKernel {
     public static final int MAX_BLOCK_SIZE_I = 4;
@@ -220,12 +217,12 @@ public class DenseLucasKanadeGpuKernel extends Kernel implements IDenseLucasKana
         float deltaJ = locJ - j;
         
         int signI = deltaI < 0 ? 1 : 0; 
-        i -= 1*signI;
-        deltaI = mad(1.0f, signI, deltaI);
+        i -= signI;
+        deltaI += signI;
 
         int signJ = deltaJ < 0 ? 1 : 0;
-        j -= 1*signJ;
-        deltaJ = mad(1.0f, signJ, deltaJ);
+        j -= signJ;
+        deltaJ += signJ;
         
         float value = mad((1.0f - deltaI), (mad((1.0f - deltaJ), readPixel(img, i  ,j), deltaJ * readPixel(img, i  ,j+1))),  
                                   deltaI * (mad((1.0f - deltaJ), readPixel(img, i+1,j), deltaJ * readPixel(img, i+1,j+1))));
@@ -515,7 +512,6 @@ public class DenseLucasKanadeGpuKernel extends Kernel implements IDenseLucasKana
     }
     
     protected void computeBs(int blockIdxI, int blockIdxJ) {
-        //Cannot contain localBarrier() because method is called from within an if condition that is not static for the local group.
         final int blockOffset = blockIdxI * blockSizeJ + blockIdxJ;
                 
         int tidI = getLocalId(1);
@@ -565,7 +561,7 @@ public class DenseLucasKanadeGpuKernel extends Kernel implements IDenseLucasKana
                 multiWorkBuffer[idxTarget + b1sOffset] = 
                         mad(dT, dI_privUs[idxSource], multiWorkBuffer[idxTarget + b1sOffset]);
             }
-        }
+        }        
     }
    
     @NoCL
@@ -668,7 +664,11 @@ public class DenseLucasKanadeGpuKernel extends Kernel implements IDenseLucasKana
         }
                 
         for (int iter = 0; iter < iterations; iter++) {
-            if (validPixels == 0 && testing == 0) {
+            if (testing == 1) {
+               //Ensure that all threads exit at the same time (mainly for JTP purposes), to avoid deadlock
+               localBarrier();
+            }
+            if (validPixels == 0) {
                 if (tidI < blockSizeI && tidJ < blockSizeJ && startLocI + tidI < imageHeight && startLocJ + tidJ < imageWidth) {
                     int blkOffset = tidI * blockSizeJ + tidJ;
                     locIPrv_Ixt[blkOffset] -= startLocI + tidI;
@@ -685,17 +685,17 @@ public class DenseLucasKanadeGpuKernel extends Kernel implements IDenseLucasKana
                 
                 return;
             }
-            
+
             for (int blockIdxI = 0; blockIdxI < blockSizeI; blockIdxI++) {
                 int blockOffsetI = blockIdxI * blockSizeJ;
                 for (int blockIdxJ = 0; blockIdxJ < blockSizeJ; blockIdxJ++) {
                     int Aindex = blockOffsetI + blockIdxJ;
-                    if ((locIPrv_Ixt[Aindex] < -windowSize/2 || locIPrv_Ixt[Aindex] >= imageHeight + windowSize/2) && status[Aindex] == 1) {
+                    if ((locIPrv_Ixt[Aindex] < 0 || locIPrv_Ixt[Aindex] >= imageHeight + windowSize/2) && status[Aindex] == 1) {
                         status[Aindex] = 0;
                         validPixels--;
                     }
                     
-                    if ((locJPrv_Iyt[Aindex] < -windowSize/2 || locJPrv_Iyt[Aindex] >= imageWidth + windowSize/2) && status[Aindex] == 1) {
+                    if ((locJPrv_Iyt[Aindex] < 0 || locJPrv_Iyt[Aindex] >= imageWidth + windowSize/2) && status[Aindex] == 1) {
                         status[Aindex] = 0;
                         validPixels--;
                     }
@@ -751,6 +751,8 @@ public class DenseLucasKanadeGpuKernel extends Kernel implements IDenseLucasKana
     
     @Override
     public void run() {
-        doDenseLucasKanade();
+        if (getPassId() == 0) {
+           doDenseLucasKanade();
+        }
     }
 }
