@@ -118,12 +118,12 @@ public class DenseLucasKanadeAparapiJob extends Job<OpticalFlowInterpolatorInput
             throw new JobAnalyzeException("dense Lucas-Kanade Aparapi job: Block size J is too large for the static kernel configuration (max. allowed: " + DenseLucasKanadeGpuKernel.MAX_BLOCK_SIZE_J + ")");
         }
 
-        int _numberOfBlocksIPerWorkGroup = (options.windowSize + blockSizeI) / workGroupSizeI;
-        if ((options.windowSize + blockSizeI) % workGroupSizeI != 0) {
+        int _numberOfBlocksIPerWorkGroup = (options.windowSize + blockSizeI - 1) / workGroupSizeI;
+        if ((options.windowSize + blockSizeI - 1) % workGroupSizeI != 0) {
             _numberOfBlocksIPerWorkGroup++;
         }
-        int _numberOfBlocksJPerWorkGroup = (options.windowSize + blockSizeJ) / workGroupSizeJ;
-        if ((options.windowSize + blockSizeJ) % workGroupSizeJ != 0) {
+        int _numberOfBlocksJPerWorkGroup = (options.windowSize + blockSizeJ - 1) / workGroupSizeJ;
+        if ((options.windowSize + blockSizeJ - 1) % workGroupSizeJ != 0) {
             _numberOfBlocksJPerWorkGroup++;
         }
 
