@@ -668,7 +668,7 @@ public final class LucasKanadeFloat implements IOpticalFlowInterpolator, ILiuShe
                 if (listener != null) {
                     listener.computedBs(b[patchIndex][0], b[patchIndex][1], incU, incV, iter, patchIndex);
                 }
-                if (FastMath.abs(incU) < 1e-3 && FastMath.abs(incV) < 1e-3) {
+                if (FastMath.abs(incU) < 1e-2 && FastMath.abs(incV) < 1e-2) {
                     status[patchIndex] = false;
                 }
                 
