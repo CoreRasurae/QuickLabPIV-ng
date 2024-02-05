@@ -137,7 +137,7 @@ public interface IImage {
             String prefix = getName();
             String suffix = "";
             if (index > 0) {
-                prefix = getName().substring(0,  - 1);
+                prefix = getName().substring(0, index - 1);
                 suffix = getName().substring(getName().lastIndexOf('.'));
             }
             StringBuilder sb = new StringBuilder(40);
