@@ -136,7 +136,9 @@ public class LucasKanadeAparapiInterpolatorTest {
         for (int i = 0; i < stepTilesB.getNumberOfTilesInI(); i++) {
             for (int j = 0; j < stepTilesB.getNumberOfTilesInJ(); j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
-                tileB.replaceDisplacement(pivHongweiGuoU[i][j], pivHongweiGuoV[i][j]);
+                //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
+                //internal QuickLabPIV Tile computations
+                tileB.replaceDisplacement(pivHongweiGuoV[i][j], pivHongweiGuoU[i][j]);
             }
         }
         
@@ -163,8 +165,10 @@ public class LucasKanadeAparapiInterpolatorTest {
         for (int i = 3; i < stepTilesB.getNumberOfTilesInI(); i++) {
             for (int j = 3; j < stepTilesB.getNumberOfTilesInJ(); j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
-                assertEquals("Velocity U does not match for tile I:" + i + ", J:" + j, validationLkU[i][j], tileB.getDisplacementU(), 1.3e-2f);
-                assertEquals("Velocity V does not match for tile I:" + i + ", J:" + j, validationLkV[i][j], tileB.getDisplacementV(), 1.3e-2f);
+                //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
+                //internal QuickLabPIV Tile computations
+                assertEquals("Velocity U does not match for tile I:" + i + ", J:" + j, validationLkU[i][j], tileB.getDisplacementV(), 1.3e-2f);
+                assertEquals("Velocity V does not match for tile I:" + i + ", J:" + j, validationLkV[i][j], tileB.getDisplacementU(), 1.3e-2f);
             }
         }
 
@@ -181,7 +185,9 @@ public class LucasKanadeAparapiInterpolatorTest {
         for (int i = 0; i < stepTilesB.getNumberOfTilesInI(); i++) {
             for (int j = 0; j < stepTilesB.getNumberOfTilesInJ(); j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
-                tileB.replaceDisplacement(pivHongweiGuoU[i][j], pivHongweiGuoV[i][j]);
+                //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
+                //internal QuickLabPIV Tile computations
+                tileB.replaceDisplacement(pivHongweiGuoV[i][j], pivHongweiGuoU[i][j]);
             }
         }
         
@@ -194,8 +200,10 @@ public class LucasKanadeAparapiInterpolatorTest {
         for (int i = 3; i < stepTilesB.getNumberOfTilesInI(); i++) {
             for (int j = 3; j < stepTilesB.getNumberOfTilesInJ(); j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
-                assertEquals("Velocity U does not match for tile I:" + i + ", J:" + j, validationLkU[i][j], tileB.getDisplacementU(), 3e-2f);
-                assertEquals("Velocity V does not match for tile I:" + i + ", J:" + j, validationLkV[i][j], tileB.getDisplacementV(), 3e-2f);
+                //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
+                //internal QuickLabPIV Tile computations
+                assertEquals("Velocity U does not match for tile I:" + i + ", J:" + j, validationLkU[i][j], tileB.getDisplacementV(), 3e-2f);
+                assertEquals("Velocity V does not match for tile I:" + i + ", J:" + j, validationLkV[i][j], tileB.getDisplacementU(), 3e-2f);
             }
         }
 
@@ -232,11 +240,13 @@ public class LucasKanadeAparapiInterpolatorTest {
                 Tile tileB = stepTilesB.getTile(i, j);
                 int pixelI = (tileB.getTopPixel() + stepTilesB.getTileHeight() / 2 - 1);
                 int pixelJ = (tileB.getLeftPixel() + stepTilesB.getTileWidth()/2 - 1);
-                tileB.replaceDisplacement(pivHongweiGuoU[i][j], pivHongweiGuoV[i][j]);
+                //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
+                //internal QuickLabPIV Tile computations
+                tileB.replaceDisplacement(pivHongweiGuoV[i][j], pivHongweiGuoU[i][j]);
                 int idx = pixelI * imageA.getWidth() + pixelJ;
                 
-                us[idx] = pivHongweiGuoV[i][j];
-                vs[idx] = pivHongweiGuoU[i][j];
+                us[idx] = pivHongweiGuoU[i][j];
+                vs[idx] = pivHongweiGuoV[i][j];
             }
         }
         
@@ -261,7 +271,7 @@ public class LucasKanadeAparapiInterpolatorTest {
             for (int j = 0; j < stepTilesB.getNumberOfTilesInJ(); j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
                 int pixelI = (tileB.getTopPixel() + stepTilesB.getTileHeight() / 2 - 1);
-                int pixelJ = (tileB.getLeftPixel() + stepTilesB.getTileWidth()/2 - 1);
+                int pixelJ = (tileB.getLeftPixel() + stepTilesB.getTileWidth() / 2 - 1);
                 int idx = pixelI * imageA.getWidth() + pixelJ;
                 tileB.replaceDisplacement(vs[idx], us[idx]);
             }
@@ -270,8 +280,10 @@ public class LucasKanadeAparapiInterpolatorTest {
         for (int i = 0; i < stepTilesB.getNumberOfTilesInI(); i++) {
             for (int j = 0; j < stepTilesB.getNumberOfTilesInJ(); j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
-                assertEquals("Velocity U does not match for tile I:" + i + ", J:" + j, validationLkU[i][j], tileB.getDisplacementU(), 1e-2f);
-                assertEquals("Velocity V does not match for tile I:" + i + ", J:" + j, validationLkV[i][j], tileB.getDisplacementV(), 1e-2f);
+                //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
+                //internal QuickLabPIV Tile computations
+                assertEquals("Velocity U does not match for tile I:" + i + ", J:" + j, validationLkU[i][j], tileB.getDisplacementV(), 1e-2f);
+                assertEquals("Velocity V does not match for tile I:" + i + ", J:" + j, validationLkV[i][j], tileB.getDisplacementU(), 1e-2f);
             }
         }
     }
@@ -298,11 +310,13 @@ public class LucasKanadeAparapiInterpolatorTest {
                 Tile tileB = stepTilesB.getTile(i, j);
                 int pixelI = (tileB.getTopPixel() + stepTilesB.getTileHeight() / 2 - 1);
                 int pixelJ = (tileB.getLeftPixel() + stepTilesB.getTileWidth()/2 - 1);
-                tileB.replaceDisplacement(pivHongweiGuoU[i][j], pivHongweiGuoV[i][j]);
+                //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
+                //internal QuickLabPIV Tile computations
+                tileB.replaceDisplacement(pivHongweiGuoV[i][j], pivHongweiGuoU[i][j]);
                 int idx = pixelI * imageA.getWidth() + pixelJ;
                 
-                us[idx] = pivHongweiGuoV[i][j];
-                vs[idx] = pivHongweiGuoU[i][j];
+                us[idx] = pivHongweiGuoU[i][j];
+                vs[idx] = pivHongweiGuoV[i][j];
             }
         }
         
@@ -336,8 +350,10 @@ public class LucasKanadeAparapiInterpolatorTest {
         for (int i = 0; i < stepTilesB.getNumberOfTilesInI(); i++) {
             for (int j = 0; j < stepTilesB.getNumberOfTilesInJ(); j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
-                assertEquals("Velocity U does not match for tile I:" + i + ", J:" + j, validationLkU[i][j], tileB.getDisplacementU(), 1.3e-2f);
-                assertEquals("Velocity V does not match for tile I:" + i + ", J:" + j, validationLkV[i][j], tileB.getDisplacementV(), 1.3e-2f);
+                //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
+                //internal QuickLabPIV Tile computations
+                assertEquals("Velocity U does not match for tile I:" + i + ", J:" + j, validationLkU[i][j], tileB.getDisplacementV(), 1.3e-2f);
+                assertEquals("Velocity V does not match for tile I:" + i + ", J:" + j, validationLkV[i][j], tileB.getDisplacementU(), 1.3e-2f);
             }
         }
     }
@@ -351,7 +367,9 @@ public class LucasKanadeAparapiInterpolatorTest {
         for (int i = 0; i < stepTilesB.getNumberOfTilesInI(); i++) {
             for (int j = 0; j < stepTilesB.getNumberOfTilesInJ(); j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
-                tileB.replaceDisplacement(pivHongweiGuoU[i][j], pivHongweiGuoV[i][j]);
+                //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
+                //internal QuickLabPIV Tile computations
+                tileB.replaceDisplacement(pivHongweiGuoV[i][j], pivHongweiGuoU[i][j]);
             }
         }
         
@@ -363,8 +381,10 @@ public class LucasKanadeAparapiInterpolatorTest {
         for (int i = 0; i < stepTilesB.getNumberOfTilesInI(); i++) {
             for (int j = 0; j < stepTilesB.getNumberOfTilesInJ(); j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
-                assertEquals("Velocity U does not match for tile I:" + i + ", J:" + j, validationLkU[i][j], tileB.getDisplacementU(), 1e-7f);
-                assertEquals("Velocity V does not match for tile I:" + i + ", J:" + j, validationLkV[i][j], tileB.getDisplacementV(), 1e-7f);
+                //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
+                //internal QuickLabPIV Tile computations
+                assertEquals("Velocity U does not match for tile I:" + i + ", J:" + j, validationLkU[i][j], tileB.getDisplacementV(), 1e-7f);
+                assertEquals("Velocity V does not match for tile I:" + i + ", J:" + j, validationLkV[i][j], tileB.getDisplacementU(), 1e-7f);
             }
         }        
     }
