@@ -728,7 +728,7 @@ public class DenseLucasKanadeGpuNVIDIAKernel extends Kernel implements IDenseLuc
                     
                     float incU = mad(b0, A00_B[Aindex], b1 * A01_IIxy[Aindex]);
                     float incV = mad(b0, A01_IIxy[Aindex], b1 * A11_II[Aindex]);
-                    if (abs(incU) < 1e-2f && abs(incV) < 1e-2f && status[Aindex] == 1) {
+                    if (abs(incU) < 1e-3f && abs(incV) < 1e-3f && status[Aindex] == 1) {
                         status[Aindex] = 0;
                         validPixels--;
                     }
