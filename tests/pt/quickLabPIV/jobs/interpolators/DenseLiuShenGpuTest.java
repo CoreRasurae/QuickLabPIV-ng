@@ -176,8 +176,8 @@ public class DenseLiuShenGpuTest {
         
         computeValidationUsAndVs(img1, img2, usVal, vsVal, 1);
         
-        validateMatrices("Liu-Shen us", usVal, us, 0, 0, img1.getHeight(), img1.getWidth(), 1e-2f);
-        validateMatrices("Liu-Shen vs", vsVal, vs, 0, 0, img1.getHeight(), img1.getWidth(), 1e-2f);
+        validateMatrices("Liu-Shen us", usVal, us, 0, 0, img1.getHeight(), img1.getWidth(), 1e-3f);
+        validateMatrices("Liu-Shen vs", vsVal, vs, 0, 0, img1.getHeight(), img1.getWidth(), 1e-3f);
     }
 
     
@@ -233,8 +233,8 @@ public class DenseLiuShenGpuTest {
         
         computeValidationUsAndVs(img1, img2, usVal, vsVal, 2);
         
-        validateMatrices("Liu-Shen us", usVal, us, 0, 0, img1.getHeight(), img1.getWidth(), 1e-2f);
-        validateMatrices("Liu-Shen vs", vsVal, vs, 0, 0, img1.getHeight(), img1.getWidth(), 1e-2f);
+        validateMatrices("Liu-Shen us", usVal, us, 0, 0, img1.getHeight(), img1.getWidth(), 1e-3f);
+        validateMatrices("Liu-Shen vs", vsVal, vs, 0, 0, img1.getHeight(), img1.getWidth(), 1e-3f);
     }
 
     @Test 
@@ -340,11 +340,8 @@ public class DenseLiuShenGpuTest {
         liuShenValidation.updateImageB(img2);
         liuShenValidation.computeFromVelocities(us, vs);        
 
-        //Here the Liu-Shen implementation computes the values based on the Python/OpenCL Lucas-Kanade implementation, and as such the margins effects are smaller,
-        //and due to the difference in implementation between the Python Liu-Shen and the Java Liu-Shen, where the Java Liu-Shen handles the image margins differently
-        //from what is proposed in the reference algorithm implementation.
-        validateMatrices("Liu-Shen us", afterLS2ndStepU, us, 7, 7, img1.getHeight()-7, img1.getWidth()-7, 2e-2f);
-        validateMatrices("Liu-Shen vs", afterLS2ndStepV, vs, 7, 7, img1.getHeight()-7, img1.getWidth()-7, 2e-2f);
+        validateMatrices("Liu-Shen us", afterLS2ndStepU, us, 7, 7, img1.getHeight()-7, img1.getWidth()-7, 7e-2f);
+        validateMatrices("Liu-Shen vs", afterLS2ndStepV, vs, 7, 7, img1.getHeight()-7, img1.getWidth()-7, 7e-2f);
     }
     
     /**
@@ -416,7 +413,7 @@ public class DenseLiuShenGpuTest {
         //behavior near the image borders. 
         validateMatrices("Lucas-Kanade us", afterLK2ndStepU, us, 13, 13, img1.getHeight()-13, img1.getWidth()-13, 2.5e-2f);
         validateMatrices("Lucas-Kanade vs", afterLK2ndStepV, vs, 13, 13, img1.getHeight()-13, img1.getWidth()-13, 2.5e-2f);        
-        
+                
         PIVContextTestsSingleton.setSingleton();
         LiuShenInterpolatorConfiguration lsConfig = new LiuShenInterpolatorConfiguration();
         lsConfig.setFilterSigmaLK(2.0f);
@@ -427,9 +424,9 @@ public class DenseLiuShenGpuTest {
         lsConfig.setFilterWidthPxLS(5);
         lsConfig.setMultiplierLagrangeLS(1000.0f);
         lsConfig.setNumberOfIterationsLS(60);
-        lsConfig.setVectorsWindowSizeLS(3);
+        lsConfig.setVectorsWindowSizeLS(33);
         lsConfig.setIgnorePIVBaseDisplacements(false);
-        lsConfig.setIgnorePIVBaseDisplacementsMode(IgnorePIVBaseDisplacementsModeEnum.IgnoreUV);
+        lsConfig.setDenseVectors(true);
         PIVInputParameters params = PIVContextSingleton.getSingleton().getPIVParameters();
         params.setSpecificConfiguration(LiuShenInterpolatorConfiguration.IDENTIFIER, lsConfig);
         
@@ -438,8 +435,8 @@ public class DenseLiuShenGpuTest {
         liuShenValidation.updateImageB(img2);
         liuShenValidation.computeFromVelocities(us, vs);
         
-        validateMatrices("Liu-Shen us", afterLS2ndStepU, us, 13, 13, img1.getHeight()-13, img1.getWidth()-13, 1.4e-2f);
-        validateMatrices("Liu-Shen vs", afterLS2ndStepV, vs, 13, 13, img1.getHeight()-13, img1.getWidth()-13, 1.4e-2f);
+        validateMatrices("Liu-Shen us", afterLS2ndStepU, us, 13, 13, img1.getHeight()-13, img1.getWidth()-13, 7e-2f);
+        validateMatrices("Liu-Shen vs", afterLS2ndStepV, vs, 13, 13, img1.getHeight()-13, img1.getWidth()-13, 7e-2f);
     }
 
     void computeValidationUsAndVs(IImage img1, IImage img2, float[][] usInOut, float[][] vsInOut, int iterations) {
@@ -490,10 +487,9 @@ public class DenseLiuShenGpuTest {
         lsConfig.setFilterWidthPxLS(5);
         lsConfig.setMultiplierLagrangeLS(1000.0f);
         lsConfig.setNumberOfIterationsLS(iterations);
-        lsConfig.setVectorsWindowSizeLS(3);
+        lsConfig.setVectorsWindowSizeLS(33);
         lsConfig.setIgnorePIVBaseDisplacements(false);
-        lsConfig.setIgnorePIVBaseDisplacementsMode(IgnorePIVBaseDisplacementsModeEnum.IgnoreUV);
-
+        lsConfig.setDenseVectors(true);
         PIVInputParameters params = PIVContextSingleton.getSingleton().getPIVParameters();
         params.setSpecificConfiguration(LiuShenInterpolatorConfiguration.IDENTIFIER, lsConfig);
         

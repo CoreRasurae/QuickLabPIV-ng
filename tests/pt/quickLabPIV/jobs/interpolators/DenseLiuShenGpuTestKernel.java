@@ -31,15 +31,58 @@ public class DenseLiuShenGpuTestKernel extends DenseLiuShenGpuKernel {
         localBarrier();
     }
 
+    public interface IDenseLucasKanadeListener {
+        void denseLucasKanadeCompleted(float us[], float vs[], float u, float v, int pixelI, int pixelJ, int idI, int idJ, int gidI, int gidJ, int tidI, int tidJ);
+    }
+    
+    private IDenseLucasKanadeListener lkListener;
+    
+    @NoCL
+    public void registerLKListener(IDenseLucasKanadeListener _listener) {
+        lkListener = _listener;
+    }
+    
+    @NoCL
+    @Override
+    protected void denseLucasKanadeCompleted() {
+        int idI = getGlobalId(1);
+        int idJ = getGlobalId(0);
+        
+        int tidI = getLocalId(1);
+        int tidJ = getLocalId(0);
+        
+        int gidI = getGroupId(1);
+        int gidJ = getGroupId(0); 
+        
+        int startLocI = gidI * blockSizeI;
+        int startLocJ = gidJ * blockSizeJ;
+                
+        if (lkListener != null) {
+            if (idI == 0 && idJ == 0) {
+                for (int i = 0; i < imageHeight; i++) {
+                    for (int j = 0; j < imageWidth; j++) {
+                        final int pixelIdx = i * imageWidth + j;
+
+                        final float u = us[pixelIdx];
+                        final float v = vs[pixelIdx];
+
+                        lkListener.denseLucasKanadeCompleted(us, vs, u, v, i, j, idI, idJ, gidI, gidJ, tidI, tidJ);
+                    }
+                }
+            }
+            localBarrier();
+        }        
+    }
+    
     public interface IDenseLiuShenListener {
         void imageAClippedAndLoaded(float[] localImgBuffer, int idI, int idJ, int gidI, int gidJ, int tidI, int tidJ);
         void imageBClippedAndLoaded(float[] localImgBuffer, int idI, int idJ, int gidI, int gidJ, int tidI, int tidJ);
         void pixelValuesLoaded(float[] pixelValues, int idI, int idJ, int gidI, int gidJ, int tidI, int tidJ);
-        void fixedImageDerivativesComputed(float IIx, float IIy, float II, float Ixt, float Iyt, float[] Bs, int idI, int idJ,
+        void fixedImageDerivativesComputed(float w, float IIx, float IIy, float II, float Ixt, float Iyt, float A11, float A12, float A22, float[] Bs, int idI, int idJ,
                 int gidI, int gidJ, int tidI, int tidJ);
-        void vectorsRefined(int w, float bu, float bv, float unew, float vnew, float totalError, float privUs[], float privVs[], int idI, int idJ,
+        void vectorsRefined(int w, float huComposite, float hvComposite, float bu, float bv, float unew, float vnew, float totalError, float privUs[], float privVs[], int iterLS, int idI, int idJ,
                 int gidI, int gidJ, int tidI, int tidJ);
-        void vectorsCopied(float[] us, float[] vs, int idI, int idJ, int gidI, int gidJ, int tidI, int tidJ);
+        void vectorsCopied(float[] us, float[] vs, int iterLS, int idI, int idJ, int gidI, int gidJ, int tidI, int tidJ);
         void totalErrorComputed(float[] totalErrorGlobal, int idI, int idJ, int gidI, int gidJ, int tidI, int tidJ);
     }
     
@@ -63,10 +106,9 @@ public class DenseLiuShenGpuTestKernel extends DenseLiuShenGpuKernel {
         int gidJ = getGroupId(0);
 
         if (listener != null) {
-            listener.imageAClippedAndLoaded(getLocalImgBuffer(), idI, idJ, gidI, gidJ, tidI, tidJ);
-            waitOnThreads();
+            listener.imageAClippedAndLoaded(getLocalImgBuffer(), idI, idJ, gidI, gidJ, tidI, tidJ);            
         }
-
+        waitOnThreads();
     };
     
     @NoCL
@@ -82,9 +124,9 @@ public class DenseLiuShenGpuTestKernel extends DenseLiuShenGpuKernel {
         int gidJ = getGroupId(0);
 
         if (listener != null) {
-            listener.imageBClippedAndLoaded(getLocalImgBuffer(), idI, idJ, gidI, gidJ, tidI, tidJ);
-            waitOnThreads();
+            listener.imageBClippedAndLoaded(getLocalImgBuffer(), idI, idJ, gidI, gidJ, tidI, tidJ);            
         }
+        waitOnThreads();
     };
     
     @NoCL
@@ -100,14 +142,14 @@ public class DenseLiuShenGpuTestKernel extends DenseLiuShenGpuKernel {
         int gidJ = getGroupId(0);
 
         if (listener != null) {
-            listener.pixelValuesLoaded(pixelValues, idI, idJ, gidI, gidJ, tidI, tidJ);
-            waitOnThreads();
+            listener.pixelValuesLoaded(pixelValues, idI, idJ, gidI, gidJ, tidI, tidJ);            
         }
+        waitOnThreads();
     }
     
     @NoCL
     @Override
-    protected void fixedImageDerivativesComputed() {
+    protected void fixedImageDerivativesComputed(float w, float A11, float A12, float A22) {
         int idI = getGlobalId(1);
         int idJ = getGlobalId(0);
         
@@ -118,13 +160,15 @@ public class DenseLiuShenGpuTestKernel extends DenseLiuShenGpuKernel {
         int gidJ = getGroupId(0);
 
         if (listener != null) {
-            listener.fixedImageDerivativesComputed(A01_IIxy[0], A01_IIxy[1], A11_II[0], locIPrv_Ixt[0], locJPrv_Iyt[0], A00_B, idI, idJ, gidI, gidJ, tidI, tidJ);
+            listener.fixedImageDerivativesComputed(w, A01_IIxy[0], A01_IIxy[1], A11_II[0], locIPrv_Ixt[0], locJPrv_Iyt[0], A11, A12, A22, A00_B, idI, idJ, gidI, gidJ, tidI, tidJ);
         }
     };
     
     @NoCL
     @Override
-    protected void vectorsRefined(int w, float bu, float bv, float unew, float vnew, float totalError) {
+    protected void vectorsRefined(int w, float huComposite, float hvComposite, float bu, float bv, float unew, float vnew, float totalError) {
+        int iterLS = getPassId() - 1;
+        
         int idI = getGlobalId(1);
         int idJ = getGlobalId(0);
         
@@ -135,13 +179,15 @@ public class DenseLiuShenGpuTestKernel extends DenseLiuShenGpuKernel {
         int gidJ = getGroupId(0);
         
         if (listener != null) {
-            listener.vectorsRefined(w, bu, bv, unew, vnew, totalError, dI_privUs, dJ_privVs, idI, idJ, gidI, gidJ, tidI, tidJ);
+            listener.vectorsRefined(w, huComposite, hvComposite, bu, bv, unew, vnew, totalError, dI_privUs, dJ_privVs, iterLS, idI, idJ, gidI, gidJ, tidI, tidJ);
         }
     };
     
     @NoCL
     @Override
     protected void vectorsCopied() {
+        int iterLS = getPassId() - 1;
+        
         int idI = getGlobalId(1);
         int idJ = getGlobalId(0);
         
@@ -153,10 +199,10 @@ public class DenseLiuShenGpuTestKernel extends DenseLiuShenGpuKernel {
 
         if (listener != null) {
             if (gidI == 0 && gidJ == 0) {
-                listener.vectorsCopied(us, vs, idI, idJ, gidI, gidJ, tidI, tidJ);
+                listener.vectorsCopied(us, vs, iterLS, idI, idJ, gidI, gidJ, tidI, tidJ);
             }
-            waitOnThreads();
         }
+        waitOnThreads();
     };
     
     @NoCL
@@ -175,7 +221,7 @@ public class DenseLiuShenGpuTestKernel extends DenseLiuShenGpuKernel {
             if (gidI == 0 && gidJ == 0) {
                 listener.totalErrorComputed(totalErrorGlobal, idI, idJ, gidI, gidJ, tidI, tidJ);
             }
-            waitOnThreads();
-        }        
+        }
+        waitOnThreads();
     }
 }
