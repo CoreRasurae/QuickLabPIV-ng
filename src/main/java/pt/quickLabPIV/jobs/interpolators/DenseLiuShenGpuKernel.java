@@ -149,12 +149,13 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
         int localSizeI = getLocalSize(1);
         int localSizeJ = getLocalSize(0);
         
+        //Read 10x10 pixels - (8x8 center pixels with 1 pixel border all around)
         int startLocI = mad24(gidI, localSizeI, - 1);
         int startLocJ = mad24(gidJ, localSizeJ, - 1);
         
         int pixelI = startLocI + tidI;
         int pixelJ = startLocJ + tidJ;
-        
+              
         int idxTarget = mad24(tidI, localSizeJ + 2, tidJ);
         localImgBuffer[idxTarget] = readPixel(img, pixelI, pixelJ);
         if (tidJ < 2) {
@@ -198,6 +199,7 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
         
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
+                //Start at (tidI, tidJ) center pixel's Top-Left corner and go down to its Bottom-Right corner
                 int localIdx = mad24(i + tidI, width, j + tidJ);
                 int idx = mad24(i, 3, j);
                 pixelValues[idx] = localImgBuffer[localIdx];
@@ -215,6 +217,7 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
+                //Start at (tidI, tidJ) center pixel's Top-Left corner and go down to its Bottom-Right corner
                 int localIdx = mad24(i + tidI, width, j + tidJ);
                 int idx = mad24(i, 3, j);
                 pixelValues[idx + 9] = localImgBuffer[localIdx];
@@ -227,7 +230,7 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
     }
     
     @NoCL
-    protected void fixedImageDerivativesComputed() {};
+    protected void fixedImageDerivativesComputed(float w, float A11, float A12, float A22) {};
     
     protected void computeFixedImageDerivatives() {
         float centerPixelValueA = pixelValues[centerIdx];
@@ -262,18 +265,21 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
         final float wBottomRight = (pixelI + 1) < imageHeight && (pixelJ + 1) < imageWidth ? 1.0f : 0.0f;
         //Only if center pixel is valid
         final float w = pixelI < imageHeight && pixelJ < imageWidth ? wTopLeft + wTop + wTopRight + wLeft + wRight + wBottomLeft + wBottom + wBottomRight : 8.0f;
-        
-        A01_IIxy[0] = centerPixelValueA * (pixelValues[topIdx]*wTop - pixelValues[bottomIdx]*wBottom) / 2.0f;
-        A01_IIxy[1] = centerPixelValueA * (pixelValues[leftIdx]*wLeft - pixelValues[rightIdx]*wRight) / 2.0f;
+                
+        A01_IIxy[0] = centerPixelValueA * (pixelValues[bottomIdx] - pixelValues[topIdx]) / 2.0f;
+        A01_IIxy[1] = centerPixelValueA * (pixelValues[rightIdx] - pixelValues[leftIdx]) / 2.0f;
         A11_II[0]   = centerPixelValueA * centerPixelValueA;
-        locIPrv_Ixt[0]  = centerPixelValueA * (- (pixelValues[topIdx  + 9] - pixelValues[topIdx])*wTop + (pixelValues[bottomIdx + 9] - pixelValues[bottomIdx])*wBottom) / 2.0f;
-        locJPrv_Iyt[0]  = centerPixelValueA * (- (pixelValues[leftIdx + 9] - pixelValues[leftIdx])*wLeft + (pixelValues[rightIdx + 9]) - pixelValues[rightIdx])*wRight / 2.0f;
+        locIPrv_Ixt[0]  = centerPixelValueA * ((pixelValues[bottomIdx + 9] - pixelValues[bottomIdx]) - (pixelValues[topIdx  + 9] - pixelValues[topIdx])) / 2.0f;
+        locJPrv_Iyt[0]  = centerPixelValueA * ((pixelValues[rightIdx + 9] - pixelValues[rightIdx]) - (pixelValues[leftIdx + 9] - pixelValues[leftIdx]))/ 2.0f;
         
         //Generate inverted matrix B
-        A00_B[0] = mad(centerPixelValueA, (pixelValues[bottomIdx]*wBottom + pixelValues[topIdx]*wTop - 2.0f*centerPixelValueA), - 2.0f * centerPixelValueA - lambda * w);
-        A00_B[2] = mad(centerPixelValueA, (pixelValues[rightIdx]*wRight + pixelValues[leftIdx]*wLeft - 2.0f*centerPixelValueA), - 2.0f * centerPixelValueA - lambda * w); 
-        A00_B[1] = centerPixelValueA * (pixelValues[topLeftIdx]*wTopLeft - pixelValues[topRightIdx]*wTopRight - pixelValues[bottomLeftIdx]*wBottomLeft + pixelValues[bottomRightIdx]*wBottomRight) / 4.0f;
+        A00_B[0] = mad(centerPixelValueA, ((pixelValues[bottomIdx] + pixelValues[topIdx] - 2.0f*centerPixelValueA) - 2.0f * centerPixelValueA), - lambda * w);
+        A00_B[2] = mad(centerPixelValueA, ((pixelValues[rightIdx] + pixelValues[leftIdx] - 2.0f*centerPixelValueA) - 2.0f * centerPixelValueA), - lambda * w); 
+        A00_B[1] = centerPixelValueA * (pixelValues[topLeftIdx] - pixelValues[topRightIdx] - pixelValues[bottomLeftIdx] + pixelValues[bottomRightIdx]) / 4.0f;
         
+        float A11 = A00_B[0];
+        float A12 = A00_B[1];
+        float A22 = A00_B[2];
         float detA = mad(A00_B[0], A00_B[2], - A00_B[1] * A00_B[1]);
         
         float temp = A00_B[0];
@@ -281,7 +287,7 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
         A00_B[1] = - A00_B[1] / detA;
         A00_B[2] =   temp / detA;
         
-        fixedImageDerivativesComputed();
+        fixedImageDerivativesComputed(w, A11, A12, A22);
     }
 
     protected void loadVectors() {
@@ -295,6 +301,7 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
         loadWithMargins(us);
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
+                //Start at (tidI, tidJ) center pixel's Top-Left corner and go down to its Bottom-Right corner
                 int localIdx = mad24(i + tidI, width, j + tidJ);
                 int idx = mad24(i, 3, j);
                 dJ_privVs[idx] = localImgBuffer[localIdx];
@@ -316,7 +323,7 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
     }
     
     @NoCL
-    protected void vectorsRefined(int w, float bu, float bv, float unew, float vnew, float totalError) {};
+    protected void vectorsRefined(int w, float huComposite, float hvComposite, float bu, float bv, float unew, float vnew, float totalError) {};
     
     protected float refineVectors() {
         float totalError = 0.0f;
@@ -351,23 +358,27 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
         //Bottom-Right
         final float wBottomRight = (pixelI + 1) < imageHeight && (pixelJ + 1) < imageWidth ? 1.0f : 0.0f;
         
-        float bu = mad(2.0f * A01_IIxy[0], (dI_privUs[topIdx]*wTop - dI_privUs[bottomIdx]*wBottom) / 2.0f, 
-                mad(A01_IIxy[0], (dJ_privVs[leftIdx]*wLeft    - dJ_privVs[rightIdx]*wRight) / 2.0f,
-                mad(A01_IIxy[1], (dJ_privVs[topIdx]*wTop     - dJ_privVs[bottomIdx]*wBottom) / 2.0f, 
-                mad(A11_II[0]  , (dI_privUs[topIdx]*wTop     + dI_privUs[bottomIdx]*wBottom),
-                mad(A11_II[0]  , (dJ_privVs[topLeftIdx]*wTopLeft - dJ_privVs[topRightIdx]*wTopRight - dJ_privVs[bottomLeftIdx]*wBottomLeft + dJ_privVs[bottomRightIdx]*wBottomRight) / 4.0f,
-                mad(lambda, (dI_privUs[topLeftIdx]*wTopLeft    + dI_privUs[topIdx]*wTop + dI_privUs[topRightIdx]*wTopRight +
-                             dI_privUs[leftIdx]*wLeft       + dI_privUs[rightIdx]*wRight +
-                             dI_privUs[bottomLeftIdx]*wBottomLeft + dI_privUs[bottomIdx]*wBottom + dI_privUs[bottomRightIdx]*wBottomRight),  locIPrv_Ixt[0]))))));
+        float huComposite = mad(lambda, (dI_privUs[topLeftIdx]*wTopLeft    + dI_privUs[topIdx]*wTop + dI_privUs[topRightIdx]*wTopRight +
+                                         dI_privUs[leftIdx]*wLeft       + dI_privUs[rightIdx]*wRight +
+                                         dI_privUs[bottomLeftIdx]*wBottomLeft + dI_privUs[bottomIdx]*wBottom + dI_privUs[bottomRightIdx]*wBottomRight),  locIPrv_Ixt[0]);
+        
+        float hvComposite = mad(lambda, (dJ_privVs[topLeftIdx]*wTopLeft    + dJ_privVs[topIdx]*wTop    + dJ_privVs[topRightIdx]*wTopRight +
+                                         dJ_privVs[leftIdx]*wLeft       + dJ_privVs[rightIdx]*wRight  +
+                                         dJ_privVs[bottomLeftIdx]*wBottomLeft + dJ_privVs[bottomIdx]*wBottom + dJ_privVs[bottomRightIdx]*wBottomRight), locJPrv_Iyt[0]);
+        
+        float bu = mad(2.0f * A01_IIxy[0], (dI_privUs[bottomIdx] - dI_privUs[topIdx]) / 2.0f, 
+                mad(A01_IIxy[0], (dJ_privVs[rightIdx]   - dJ_privVs[leftIdx]) / 2.0f,
+                mad(A01_IIxy[1], (dJ_privVs[bottomIdx]  - dJ_privVs[topIdx]) / 2.0f, 
+                mad(A11_II[0]  , (dI_privUs[topIdx]     + dI_privUs[bottomIdx]),
+                mad(A11_II[0]  , (dJ_privVs[topLeftIdx] - dJ_privVs[topRightIdx] - dJ_privVs[bottomLeftIdx] + dJ_privVs[bottomRightIdx]) / 4.0f,
+                huComposite)))));
  
-       float bv = mad(2.0f * A01_IIxy[1], (dJ_privVs[leftIdx]*wLeft - dJ_privVs[rightIdx]*wRight) / 2.0f, 
-                mad(A01_IIxy[0], (dI_privUs[leftIdx]*wLeft    - dI_privUs[rightIdx]*wRight) / 2.0f, 
-                mad(A01_IIxy[1], (dI_privUs[topIdx]*wTop     - dI_privUs[bottomIdx]*wBottom) / 2.0f,
-                mad(A11_II[0]  , (dJ_privVs[leftIdx]*wLeft    + dJ_privVs[rightIdx]*wRight),
-                mad(A11_II[0]  , (dI_privUs[topLeftIdx]*wTopLeft - dI_privUs[topRightIdx]*wTopRight - dI_privUs[bottomLeftIdx]*wBottomLeft + dI_privUs[bottomRightIdx]*wBottomRight) / 4.0f,
-                mad(lambda, (dJ_privVs[topLeftIdx]*wTopLeft    + dJ_privVs[topIdx]*wTop    + dJ_privVs[topRightIdx]*wTopRight +
-                             dJ_privVs[leftIdx]*wLeft       + dJ_privVs[rightIdx]*wRight  +
-                             dJ_privVs[bottomLeftIdx]*wBottomLeft + dJ_privVs[bottomIdx]*wBottom + dJ_privVs[bottomRightIdx]*wBottomRight), locJPrv_Iyt[0]))))));
+        float bv = mad(2.0f * A01_IIxy[1], (dJ_privVs[rightIdx] - dJ_privVs[leftIdx]) / 2.0f, 
+                mad(A01_IIxy[0], (dI_privUs[rightIdx]   - dI_privUs[leftIdx]) / 2.0f, 
+                mad(A01_IIxy[1], (dI_privUs[bottomIdx]  - dI_privUs[topIdx]) / 2.0f,
+                mad(A11_II[0]  , (dJ_privVs[leftIdx]    + dJ_privVs[rightIdx]),
+                mad(A11_II[0]  , (dI_privUs[topLeftIdx] - dI_privUs[topRightIdx] - dI_privUs[bottomLeftIdx] + dI_privUs[bottomRightIdx]) / 4.0f,
+                hvComposite)))));
 
         float unew = -mad(A00_B[0], bu, A00_B[1]*bv);
         float vnew = -mad(A00_B[1], bu, A00_B[2]*bv);
@@ -380,7 +391,7 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
             vsNew[idx] = vnew;
         }
         
-        vectorsRefined(w, bu, bv, unew, vnew, totalError);
+        vectorsRefined(w, huComposite, hvComposite, bu, bv, unew, vnew, totalError);
         
         return totalError;
     }
@@ -506,6 +517,8 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
             validGroupsJ++;
         }
         int validGroups = validGroupsI * validGroupsJ;
+        
+        int validThreads = validGroups * localSizeI * localSizeJ;
 
         if (startLocI >= imageHeight || startLocJ >= imageWidth) {
             //Reject workgroups that are completely outside of the image
@@ -531,26 +544,30 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
         globalBarrier();
 
         //Signal when the last workgroup passes through
-        if (tidI == 0 && tidJ == 0 && atomicInc(initCompleted[1]) == validGroups - 1) {
-            atomicSet(initCompleted[0], -1);
-            atomicSet(initCompleted[1],  0);
-        }
-
         int grpIdx = mad24(gidI, numGroupsJ, gidJ);
-        //Ensure that all the same workgroup threads wait for the atomic update
-        globalBarrier();
-        atomicCmpXchg(initCompleted[0], -1, grpIdx);
-        //Ensure that all threads see the change above (this should be a mem_fence instead of barrier, but Aparapi does not support it yet).
-        globalBarrier();
-        //Ensure that all the workitems from the last work-group that runs, work together to copy the results vectors
-        if (grpIdx == atomicGet(initCompleted[0])) {
-            copyVectors();
-            computeTotalError();
+        if (gidI < validGroupsI && gidJ < validGroupsJ && atomicInc(initCompleted[1]) == validThreads - 1) {
+            atomicSet(initCompleted[0], grpIdx);
+            atomicSet(initCompleted[1], -1);            
         }
 
-        waitOnThreads();
-        vectorsCopied();
-        totalErrorComputed();
+        //Ensure that all threads see the change above (this should be a mem_fence instead of barrier, but Aparapi does not support it yet).
+        globalBarrier();        
+        //Ensure that all the workitems from the last work-group that runs, work together to copy the results vectors
+        if (atomicGet(initCompleted[1]) == -1 && grpIdx == atomicGet(initCompleted[0])) {
+            copyVectors();
+            computeTotalError();            
+        }
+        
+        localBarrier();
+        if (atomicGet(initCompleted[1]) == -1 && grpIdx == atomicGet(initCompleted[0])) {
+            vectorsCopied();
+            totalErrorComputed();            
+        }
+
+        //After the last workgroup has copied all the vectors, we can now reset the group counter back to 0, for the next iteration pass
+        if (atomicGet(initCompleted[1]) == -1 && grpIdx == atomicGet(initCompleted[0])) {
+            atomicSet(initCompleted[1], 0);
+        }
     }
 
     @NoCL
@@ -558,6 +575,9 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
 
     @NoCL
     protected void totalErrorComputed() {};
+    
+    @NoCL
+    protected void denseLucasKanadeCompleted() {};
         
     /**
      * A Bug in Aparapi makes it unable to detect inherited methods marked with NoCL.
@@ -572,6 +592,11 @@ public class DenseLiuShenGpuKernel extends DenseLucasKanadeGpuKernel implements 
         if (passId == 0) {
             doDenseLucasKanade();
         } else {
+            if (passId == 1) {
+               //Only at this point can Lucas-Kanade results be tested, because each pixel typically requires more than one 
+               //workgroup to compute its corresponding displacement.
+               denseLucasKanadeCompleted();
+            }
             doDenseLiuShen(passId);
         }
         waitOnThreads();

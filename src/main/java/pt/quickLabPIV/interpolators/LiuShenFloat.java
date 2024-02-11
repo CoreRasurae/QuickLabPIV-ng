@@ -162,7 +162,7 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
             deltaJ += 1.0f;
         }
         
-        float value = (1.0f - deltaI) * ((1.0f - deltaJ) * getNearestPixel(img, i,j) + deltaJ * getNearestPixel(img, i,j+1)) + 
+        float value = (1.0f - deltaI) * ((1.0f - deltaJ) * getNearestPixel(img, i  ,j) + deltaJ * getNearestPixel(img, i  ,j+1)) + 
                               deltaI  * ((1.0f - deltaJ) * getNearestPixel(img, i+1,j) + deltaJ * getNearestPixel(img, i+1,j+1));
         
         return value;
@@ -219,21 +219,21 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
                 float wBottom = 1.0f;
                 float wBottomRight = 1.0f;
                 
-                if (i == -vectorsWindowSizeI/2) {
+                if (i == startI) {
                     wTopLeft = 0.0f;
                     wTop = 0.0f;
                     wTopRight = 0.0f;
-                } else if (i == vectorsWindowSizeI/2) {
+                } else if (i == endI) {
                     wBottomLeft = 0.0f;
                     wBottom = 0.0f;
                     wBottomRight = 0.0f;
                 }
 
-                if (j == -vectorsWindowSizeJ/2) {
+                if (j == startJ) {
                     wTopLeft = 0.0f;
                     wLeft = 0.0f;
                     wBottomLeft = 0.0f;
-                } else if (j == vectorsWindowSizeJ/2) {
+                } else if (j == endJ) {
                     wTopRight = 0.0f;
                     wRight = 0.0f;
                     wBottomRight = 0.0f;
@@ -241,16 +241,16 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
 
                 w = wTopLeft + wTop + wTopRight + wLeft + wRight + wBottomLeft + wBottom + wBottomRight;
                 
-                IIx[idx] = centerPixelValueA * (pixelMapA[topIndex]*wTop - pixelMapA[bottomIndex]*wBottom) / (2.0f * dx);
-                IIy[idx] = centerPixelValueA * (pixelMapA[leftIndex]*wLeft - pixelMapA[rightIndex]*wRight) / (2.0f * dx);
+                IIx[idx] = centerPixelValueA * (pixelMapA[bottomIndex] - pixelMapA[topIndex]) / (2.0f * dx);
+                IIy[idx] = centerPixelValueA * (pixelMapA[rightIndex] - pixelMapA[leftIndex]) / (2.0f * dx);
                 II[idx]  = centerPixelValueA * centerPixelValueA;
-                Ixt[idx] = centerPixelValueA * (- (pixelMapB[topIndex] - pixelMapA[topIndex])*wTop + (pixelMapB[bottomIndex] - pixelMapA[bottomIndex])*wBottom) / (2.0f * dx);
-                Iyt[idx] = centerPixelValueA * (- (pixelMapB[leftIndex] - pixelMapA[leftIndex])*wLeft + (pixelMapB[rightIndex] - pixelMapA[rightIndex])*wRight) / (2.0f * dx);
+                Ixt[idx] = centerPixelValueA * ((pixelMapB[bottomIndex] - pixelMapA[bottomIndex]) - (pixelMapB[topIndex] - pixelMapA[topIndex])) / (2.0f * dx);
+                Iyt[idx] = centerPixelValueA * ((pixelMapB[rightIndex] - pixelMapA[rightIndex]) - (pixelMapB[leftIndex] - pixelMapA[leftIndex])) / (2.0f * dx);
                 
                 //Generate inverted matrix B
-                A[idx][0] = centerPixelValueA * (pixelMapA[bottomIndex]*wBottom + pixelMapA[topIndex]*wTop - 2.0f*centerPixelValueA)/(dx*dx) - 2.0f * centerPixelValueA / (dx*dx) - lambda * w / (dx*dx);
-                A[idx][2] = centerPixelValueA * (pixelMapA[rightIndex]*wRight + pixelMapA[leftIndex]*wLeft - 2.0f*centerPixelValueA)/(dx*dx) - 2.0f * centerPixelValueA / (dx*dx) - lambda * w / (dx*dx); 
-                A[idx][1] = centerPixelValueA * (pixelMapA[topLeftIndex]*wTopLeft - pixelMapA[topRightIndex]*wTopRight - pixelMapA[bottomLeftIndex]*wBottomLeft + pixelMapA[bottomRightIndex]*wBottomRight) / (4.0f*dx*dx);
+                A[idx][0] = centerPixelValueA * ((pixelMapA[bottomIndex] + pixelMapA[topIndex] - 2.0f*centerPixelValueA)/(dx*dx) - 2.0f * centerPixelValueA / (dx*dx)) - lambda * w / (dx*dx);
+                A[idx][2] = centerPixelValueA * ((pixelMapA[rightIndex] + pixelMapA[leftIndex] - 2.0f*centerPixelValueA)/(dx*dx) - 2.0f * centerPixelValueA / (dx*dx)) - lambda * w / (dx*dx); 
+                A[idx][1] = centerPixelValueA * (pixelMapA[topLeftIndex] - pixelMapA[topRightIndex] - pixelMapA[bottomLeftIndex] + pixelMapA[bottomRightIndex]) / (4.0f*dx*dx);
                 
                 float detA = A[idx][0] * A[idx][2] - A[idx][1] * A[idx][1];
                 
@@ -386,8 +386,10 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
 
     private void refineVectors(final int startI, final int endI, final int startJ, final int endJ, final int dx) {
         //Intentionally swapped because Liu-Shen U,V velocity components are swapped with respect to Lucas-Kanade
-        final GVec gus = (i, j) -> getValueComplete(vs, i, j, startI, endI, startJ, endJ, true);
-        final GVec gvs = (i, j) -> getValueComplete(us, i, j, startI, endI, startJ, endJ, true);
+        final GVec gus = (i, j) -> getValueComplete(vs, i, j, startI, endI, startJ, endJ, false);
+        final GVec gvs = (i, j) -> getValueComplete(us, i, j, startI, endI, startJ, endJ, false);
+        final GVec gusW = (i, j) -> getValueComplete(vs, i, j, startI, endI, startJ, endJ, true);
+        final GVec gvsW = (i, j) -> getValueComplete(us, i, j, startI, endI, startJ, endJ, true);
         
         float totalError = Float.MAX_VALUE;
         float tolerance = 1e-8f;
@@ -403,23 +405,23 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
                     int idx = (i - startI) * vectorsWindowSizeJ + j - startJ;
                     
                     //
-                    float bu = 2.0f * IIx[idx] * (gus.get(i-1, j  ) - gus.get(i+1, j  )) / (2.0f * dx) + 
-                                      IIx[idx] * (gvs.get(i  , j-1) - gvs.get(i  , j+1)) / (2.0f * dx) +
-                                      IIy[idx] * (gvs.get(i-1, j  ) - gvs.get(i+1, j  )) / (2.0f * dx) + 
+                    float bu = 2.0f * IIx[idx] * (gus.get(i+1, j  ) - gus.get(i-1, j  )) / (2.0f * dx) + 
+                                      IIx[idx] * (gvs.get(i  , j+1) - gvs.get(i  , j-1)) / (2.0f * dx) +
+                                      IIy[idx] * (gvs.get(i+1, j  ) - gvs.get(i-1, j  )) / (2.0f * dx) + 
                                        II[idx] * (gus.get(i-1, j  ) + gus.get(i+1, j  )) / (dx * dx) +
                                        II[idx] * (gvs.get(i-1, j-1) - gvs.get(i-1, j+1) - gvs.get(i+1, j-1) + gvs.get(i+1, j+1)) / (4.0f * dx * dx)+
-                                        lambda * (gus.get(i-1, j-1) + gus.get(i-1, j  ) + gus.get(i-1, j+1) +
-                                                  gus.get(i  , j-1) + gus.get(i  , j+1) +
-                                                  gus.get(i+1, j-1) + gus.get(i+1, j  ) + gus.get(i+1, j+1)) / (dx * dx)+ Ixt[idx];
+                                        lambda * (gusW.get(i-1, j-1) + gusW.get(i-1, j  ) + gusW.get(i-1, j+1) +
+                                                  gusW.get(i  , j-1) + gusW.get(i  , j+1) +
+                                                  gusW.get(i+1, j-1) + gusW.get(i+1, j  ) + gusW.get(i+1, j+1)) / (dx * dx)+ Ixt[idx];
                     
-                    float bv = 2.0f * IIy[idx] * (gvs.get(i  , j-1) - gvs.get(i  , j+1)) / (2.0f * dx) +
-                                      IIy[idx] * (gus.get(i-1, j  ) - gus.get(i+1, j  )) / (2.0f * dx) +
-                                      IIx[idx] * (gus.get(i  , j-1) - gus.get(i  , j+1)) / (2.0f * dx) +                                       
+                    float bv = 2.0f * IIy[idx] * (gvs.get(i  , j+1) - gvs.get(i  , j-1)) / (2.0f * dx) +
+                                      IIy[idx] * (gus.get(i+1, j  ) - gus.get(i-1, j  )) / (2.0f * dx) +
+                                      IIx[idx] * (gus.get(i  , j+1) - gus.get(i  , j-1)) / (2.0f * dx) +                                       
                                        II[idx] * (gvs.get(i  , j-1) + gvs.get(i  , j+1)) / (dx * dx) +
                                        II[idx] * (gus.get(i-1, j-1) - gus.get(i-1, j+1) - gus.get(i+1, j-1) + gus.get(i+1, j+1)) / (4.0f * dx * dx) +
-                                        lambda * (gvs.get(i-1, j-1) + gvs.get(i-1, j  ) + gvs.get(i-1, j+1) +
-                                                  gvs.get(i  , j-1) + gvs.get(i  , j+1) +
-                                                  gvs.get(i+1, j-1) + gvs.get(i+1, j  ) + gvs.get(i+1, j+1)) / (dx * dx) + Iyt[idx];
+                                        lambda * (gvsW.get(i-1, j-1) + gvsW.get(i-1, j  ) + gvsW.get(i-1, j+1) +
+                                                  gvsW.get(i  , j-1) + gvsW.get(i  , j+1) +
+                                                  gvsW.get(i+1, j-1) + gvsW.get(i+1, j  ) + gvsW.get(i+1, j+1)) / (dx * dx) + Iyt[idx];
                             
                     float unew = (float)-(B[idx][0]*bu + B[idx][1]*bv);
                     float vnew = (float)-(B[idx][1]*bu + B[idx][2]*bv);
@@ -441,7 +443,13 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
         }
     }
 
-    public void interpolateFromFullImageWithAparapi(IterationStepTiles stepTilesA, IterationStepTiles stepTilesB) {
+    /**
+     * Performs bi-cubic spline interpolation of PIV vectors in stepTilesB, applies dense Lucas-Kanade (no Liu-Shen) to the interpolated velocities, and exports
+     * the results back to the tiles with both dense and sparse results.
+     * @param stepTilesA the PIV step tiles A with the current PIV results
+     * @param stepTilesB the PIV step tiles B with the current PIV results
+     */
+    public void interpolateFromFullImageWithLKAparapi(IterationStepTiles stepTilesA, IterationStepTiles stepTilesB) {
         if (vectorsWindowSizeI != filteredImgA.getHeight() || vectorsWindowSizeJ != filteredImgA.getWidth()) {
             vectorsWindowSizeI = filteredImgA.getHeight();
             vectorsWindowSizeJ = filteredImgA.getWidth();
@@ -459,7 +467,7 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
             usNew = new float[vectorsWindowSizeI * vectorsWindowSizeJ];
             vsNew = new float[vectorsWindowSizeI * vectorsWindowSizeJ];
             usAndVs = new float[2][vectorsWindowSizeI * vectorsWindowSizeJ];
-            //Swapped on purpose to match PIV vector orientation, which is swapped from OpF orientation
+            //Swapped on purpose to match PIV vector orientation/BiCubic interpolator, which is swapped from OpF orientation
             usAndVs[0] = vs;
             usAndVs[1] = us;
         }
@@ -683,6 +691,11 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
         }
     }
 
+    /**
+     * Compute velocities from initial velocities estimate
+     * @param _us horizontal velocities components (input/output)
+     * @param _vs vertical velocities components (input/output)
+     */
     public void computeFromVelocities(float[] _us, float[] _vs) {
         if (vectorsWindowSizeI != filteredImgA.getHeight() || vectorsWindowSizeJ != filteredImgA.getWidth()) {
             vectorsWindowSizeI = filteredImgA.getHeight();
@@ -700,10 +713,6 @@ public class LiuShenFloat implements IOpticalFlowInterpolator {
             vs = new float[vectorsWindowSizeI * vectorsWindowSizeJ];
             usNew = new float[vectorsWindowSizeI * vectorsWindowSizeJ];
             vsNew = new float[vectorsWindowSizeI * vectorsWindowSizeJ];
-            usAndVs = new float[2][vectorsWindowSizeI * vectorsWindowSizeJ];
-            //Swapped on purpose to match PIV vector orientation, which is swapped from Lucas-Kanade OpF orientation
-            usAndVs[0] = vs;
-            usAndVs[1] = us;
         }
         
         final int dx = 1;
