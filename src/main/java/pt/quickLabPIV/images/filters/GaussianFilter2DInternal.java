@@ -79,7 +79,7 @@ class GaussianFilter2DInternal<R> {
         
         int bufXSize = height + kernel.length - 1;
         
-        for (int j = 0; j < height; j++) {
+        for (int j = 0; j < width; j++) {
             for (int i = 0; i < height; i++) {
                 bufX[i + halfSize] = rf.reader(i, j, output);
             }
