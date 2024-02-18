@@ -27,7 +27,7 @@ public class SubPixelInterpolationOptionsLiuShenWithLucasKanadeModel extends Sub
     private float filterSigmaLS = 0.48f;
     private int filterWidthPxLS = 5;
 
-    private float multiplierLS = 1000.0f;
+    private float multiplierLS = 4.0f;
     private int numberOfIterationsLS = 60;
     private int vectorsWindowSizeLS  = 13;
 
