@@ -4,7 +4,7 @@
 	<groupId>pt.quickLabPIV</groupId>
 	<artifactId>QuickLabPIVng</artifactId>
 	<packaging>jar</packaging>
-	<version>0.8.5</version>
+	<version>0.8.6</version>
 	<name>QuickLab PIV new generation</name>
 	<url>http://maven.apache.org</url>
 
@@ -26,7 +26,7 @@
 	<repositories>
 	<repository>
                 <id>mavenLM</id>
-                    <url>file:///mavenLM</url>
+                    <url>file:///home/lpnm/Documents/HPC/mavenLM</url>
                 </repository>    
                 <repository>
 		    <id>ossrh.snapshots</id>
@@ -103,7 +103,7 @@
 		<dependency>
 		    <groupId>com.aparapi</groupId>
 		    <artifactId>aparapi</artifactId>
-		    <version>3.0.1-LM</version>
+		    <version>3.0.2_SNAP</version>
 		</dependency>
 		<dependency>
 		    <groupId>com.aparapi</groupId>
