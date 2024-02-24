@@ -205,7 +205,7 @@ public class AboutDialog extends JDialog {
         SimpleAttributeSet center = new SimpleAttributeSet();
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
-        txtpnCopyrightc.setText("Copyright(C) 2017 - 2023\nApplication design, implementation and testing:\n     Luís P. N. Mendes\n\nProject supervisors:\n   Rui M. L. Ferreira\n   Alexandre J. M. Bernardino\n   Ana M. C. Ricardo");
+        txtpnCopyrightc.setText("Copyright(C) 2017 - 2024\nApplication design, implementation and testing:\n     Luís P. N. Mendes\n\nProject supervisors:\n   Rui M. L. Ferreira\n   Alexandre J. M. Bernardino\n   Ana M. C. Ricardo");
         txtpnCopyrightc.setEditable(false);
         GridBagConstraints gbc_txtpnCopyrightc = new GridBagConstraints();
         gbc_txtpnCopyrightc.gridwidth = 2;
