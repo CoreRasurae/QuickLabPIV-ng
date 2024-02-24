@@ -162,8 +162,8 @@ public class LucasKanadeAparapiInterpolatorTest {
         interpolator.interpolate(maxCrossResults);
         stepTilesB.updateDisplacementsFromMaxCrossResults(0, maxCrossResults);
 
-        for (int i = 3; i < stepTilesB.getNumberOfTilesInI(); i++) {
-            for (int j = 3; j < stepTilesB.getNumberOfTilesInJ(); j++) {
+        for (int i = 0; i < stepTilesB.getNumberOfTilesInI(); i++) {
+            for (int j = 0; j < stepTilesB.getNumberOfTilesInJ(); j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
                 //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
                 //internal QuickLabPIV Tile computations
@@ -197,8 +197,8 @@ public class LucasKanadeAparapiInterpolatorTest {
                 
         interpolator.interpolate(stepTilesA, stepTilesB);
 
-        for (int i = 3; i < stepTilesB.getNumberOfTilesInI(); i++) {
-            for (int j = 3; j < stepTilesB.getNumberOfTilesInJ(); j++) {
+        for (int i = 1; i < stepTilesB.getNumberOfTilesInI()-1; i++) {
+            for (int j = 1; j < stepTilesB.getNumberOfTilesInJ()-1; j++) {
                 Tile tileB = stepTilesB.getTile(i, j);
                 //Intentionally swapped reference data, because QuickLabPIV exported matFloat data has U,V coordinates swapped with respect
                 //internal QuickLabPIV Tile computations

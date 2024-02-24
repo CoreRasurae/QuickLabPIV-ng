@@ -22,11 +22,6 @@ import pt.quickLabPIV.exporter.SimpleFloatMatrixImporterExporter;
 import pt.quickLabPIV.images.IImage;
 import pt.quickLabPIV.images.ImageFloat;
 import pt.quickLabPIV.images.ImageTestHelper;
-import pt.quickLabPIV.images.filters.DirectConvolution;
-import pt.quickLabPIV.images.filters.GaussianFilter2D;
-import pt.quickLabPIV.images.filters.GaussianFilter2DConfiguration;
-import pt.quickLabPIV.images.filters.IConvolution1D;
-import pt.quickLabPIV.images.filters.IFilter;
 
 public class GaussianFilter2DTest {
     float[][] imgFiltered;
