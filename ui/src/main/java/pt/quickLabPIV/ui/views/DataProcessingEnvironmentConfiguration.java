@@ -2,7 +2,7 @@
 /*
  * QuickLabPIV-ng - A hybrid PIV and PIV software laboratory (new generation)
  *
- * Copyright (C) 2020 Luís Mendes
+ * Copyright (C) 2017 to present: Luís Mendes <luis.mendes@tecnico.ulisboa.pt>
  */
 package pt.quickLabPIV.ui.views;
 
