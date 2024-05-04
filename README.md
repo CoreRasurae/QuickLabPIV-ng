@@ -13,9 +13,12 @@ A Particle Imaging Velocimetry (PIV) and Dense PIV Software Laboratory with GPGP
 - Support images sequences and image pairs
 - Selectable GPU per CPU threads distribution
 
+# Software based on research work
+Mendes, L.P.N.; Ricardo, A.M.C.; Bernardino, A.J.M.; Ferreira, R.M.L. A Hybrid PIV/Optical Flow Method for Incompressible Turbulent Flows. Water 2024, 16, 1021. https://doi.org/10.3390/w16071021 
+
 # Compilation
 - Pre-requisites:
-  Java development kit higher than 8, maven, QuickLabPIV-libs, Aparapi
+  Java development kit at least version 8, maven, QuickLabPIV-libs, Aparapi
   
   https://github.com/CoreRasurae/QuickLabPIV-libs/releases/tag/QuickLabPIV-libs_v0.1.0
 
