@@ -1,3 +1,5 @@
+## If you like this project, or if it is useful to you in any way, please give this project a GitHub star, it costs nothing.
+
 # QuickLabPIV-ng
 A Particle Imaging Velocimetry (PIV) and Dense PIV Software Laboratory with GPGPU processing
 
