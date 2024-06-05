@@ -3,6 +3,8 @@
 # QuickLabPIV-ng
 A Particle Imaging Velocimetry (PIV) and Dense PIV Software Laboratory with GPGPU processing
 
+![QuickLabPIV-ng](images/Cover.png?raw=true)
+
 - PIV and Hybrid PIV high performance computing application with GP-GPU OpenCL support (by Aparapi)
 - Friendly Graphical User Interface (GUI)
 - Supports both dense and sparse Liu-Shen combined with Lucas-Kanade and Lucas-Kanade only Optical Flow methods
